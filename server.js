@@ -3,6 +3,11 @@ var socket = require("socket.io")
 
 var fs = require('fs');
 
+fs.appendFile('loginCredentials.txt', 'testing\n', function (err) {
+    if (err) throw err;
+    console.log('Saved!');
+  }); 
+
 
 //app setup
 var app = express();
