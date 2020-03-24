@@ -4,13 +4,9 @@ var socket = io.connect(window.location.href);//change to server's location
 //TODO: var for overall size of the game
 
 var uploadrate=.3//slow for testing
-var playerViewDist=400 //100
-var playerWallViewDist=200
-var playerViewAngle=0.785398//45 degrees in radians
-var playerSpeedNormal=100
-var playerTurnSpeed=1
 
-var gridUnitSize=70
+
+var gridUnitSize=50
 
 
 //get html assets
@@ -51,15 +47,11 @@ class Player{
         this.angle=angle
         this.id=id
         this.isActive=true
-        this.isConnected=isConnected
-        this.joinCode=-1
         this.inputs={
             walkForward: false,
             walkBackward: false,
             walkRight: false,
-            walkLeft: false,
-            turnRight: false,
-            turnLeft: false
+            walkLeft: false
         }
         this.visibleWalls=[]
         this.visiblePlayers=[]
@@ -68,20 +60,6 @@ class Player{
 }
 var me=new Player(-1,-1,-1,false,0)//overwritten when connected to server
 
-class Wall{
-    constructor(x1,y1,height,width){
-        this.x1=x1
-        this.y1=y1
-        this.height=height
-        this.width=width
-
-        //used for more math
-        this.x2=x1+width
-        this.y2=y1+height
-        this.centerX=x1+(width/2)
-        this.centerY=y1+(height/2)
-    }
-}
 
 //handle inputs-----------------------------
 var keys = [];
@@ -100,47 +78,6 @@ function drawBackground(){
         context.fillStyle = "rgb(19, 19, 32)"
     context.fillRect(0, 0, canvas.width, canvas.height)
 }
-
-//generate map (host)
-var mapIsGenerated=false
-function generateMap(){
-    
-    var u=gridUnitSize
-    var xLen = Math.floor(canvas.width/gridUnitSize)
-    var yLen = Math.floor(canvas.height/gridUnitSize)
-
-    var map=[]
-    for(var r=0;r<yLen;r++){
-        var row=[]
-        for(var c=0;c<xLen;c++){
-            if(r>0 && r<yLen-2 && c>0 && c<xLen-1){//don't care about edges
-                if(map[r-1][c-1]===null && map[r-1][c+1]===null){//NO CORNER TOUCHING
-                    if(Math.floor(Math.random() * 2) == 0){//flip a coin
-                        row.push(new Wall(c*u,r*u,u,u))
-                    }
-                    else{
-                        row.push(null)
-                    }
-                }
-                else{
-                    row.push(null)
-                }
-            }
-            else if (r==yLen-2){//second to last row
-                if(c==0 || c==xLen-1){
-                    row.push(new Wall(c*u,r*u,u,u))
-                }
-                row.push(null)
-            }
-            else{//bottom, top, and side walls
-                row.push(new Wall(c*u,r*u,u,u))
-            }
-        }
-        map.push(row)
-    }
-    return map
-}
-
 
 //https://gamedev.stackexchange.com/questions/114898/frustum-culling-how-to-calculate-if-an-angle-is-between-another-two-angles
 function deltaAngle(px,py,pa,objx,objy){
@@ -178,21 +115,20 @@ window.onload = function(){
         canvas.width=canvas.width//refresh canvas
         drawBackground()
 
-        if(!isPseudoServer && me.isConnected){
+        //no need to slow down unconnected clients
+        if(me.isConnected){
             uploadtimer+=deltatime
             if(uploadtimer>uploadrate){
                 // send inputs to pseudoServer
                 sendInputsToHost(keys[87],keys[83],keys[68],keys[65],keys[76],keys[75])
             }
 
-            var mul=1
-            
-            //render light
+            //render eye
             context.beginPath();
-            context.fillStyle = 'white'
-            context.strokeStyle="white"
-            context.moveTo(me.x+0,me.y)
-            context.arc(me.x, me.y, playerViewDist*mul , me.angle-(playerViewAngle/2), me.angle+(playerViewAngle/2));
+            context.moveTo(me.x,me.y)
+            context.fillStyle = "red"
+            context.strokeStyle="red"
+            context.arc(me.x+Math.cos(me.angle), me.y+Math.sin(me.angle), 5, 0, 2 * Math.PI);
             context.fill();
             context.stroke();
 
@@ -210,16 +146,6 @@ window.onload = function(){
             //render others
             me.visiblePlayers.forEach(function(vp){
 
-                //FIXME: multiple players appear red
-
-                //fov
-                context.beginPath();
-                context.strokeStyle="white"
-                context.fillStyle = '#edb7ea'
-                context.moveTo((vp.x*mul)+me.x,(-vp.y*mul)+me.y)
-                context.arc((vp.x*mul)+me.x, (-vp.y*mul)+me.y, playerViewDist*mul , vp.angle-(playerViewAngle/2), vp.angle+(playerViewAngle/2));
-                context.fill();
-                context.stroke();
                 //player
                 context.beginPath();
                 context.fillStyle = 'red'
@@ -229,6 +155,7 @@ window.onload = function(){
                 context.closePath();
                 context.fill();
                 context.stroke();
+                
             })
             context.stroke();
 
