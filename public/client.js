@@ -28,7 +28,7 @@ class Me{
     constructor(x,y){
         this.x=x
         this.y=y
-        this.isConnected=false
+        this.isConnected=true//false
         this.inputs={
             forward: false,
             backward: false,
@@ -99,7 +99,7 @@ window.onload = function(){
             uploadtimer+=deltatime
             if(uploadtimer>uploadrate){
                 // send inputs to server
-                sendInputsToHost(keys[87],keys[83],keys[68],keys[65],keys[76],keys[75])
+                //sendInputsToHost(keys[87],keys[83],keys[68],keys[65],keys[76],keys[75])
 
                 //TODO: move the player locally
             }
@@ -344,27 +344,8 @@ function updatePlayer(p){
 //networking in---------------------------
 
 socket.on("serverPrivate",function(data){//server connection
-    if(me.isConnected){
-        mySocketId=data
-        pseudoServerInfo.innerHTML="connected to server, but not host"
-    }
+    console.log("serverPrivate "+data)
 });
-
-socket.on("clientToHost",function(data){
-    if(isPseudoServer){
-        // record player's inputs
-        //new player is added in serverToHost
-        me.players[data.playerId].inputs={
-            walkForward: data.walkForward,
-            walkBackward: data.walkBackward,
-            walkRight: data.walkRight,
-            walkLeft: data.walkLeft,
-            turnRight: data.turnRight,
-            turnLeft: data.turnLeft
-        }
-    }
-
-})
 
 
 socket.on("hostToSingleClient",function(data){// should probably authenticate since no data is sent

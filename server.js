@@ -17,8 +17,6 @@ class Player{
         this.socket=socket
         this.isActive=true
 
-        this.username="anonymous"
-        this.health=100
         this.position={
             x:0,
             y:0
