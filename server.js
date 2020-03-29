@@ -1,12 +1,6 @@
 var express = require("express")
 var socket = require("socket.io")
 
-var fs = require('fs');
-
-fs.appendFile('loginCredentials.txt', 'testing\n', function (err) {
-    if (err) throw err;
-    console.log('Saved!');
-  }); 
 
 
 //app setup
@@ -27,8 +21,7 @@ class Player{
         this.health=100
         this.position={
             x:0,
-            y:0,
-            a:0
+            y:0
         }
     }
 }
@@ -50,16 +43,8 @@ io.on("connection",function(socket){
     playerLookup[socket.id].socket.emit("serverPrivate",socket.id)
 
     console.log("client connected on socket: ",socket.id +" Current active sockets: "+getTotalActiveSockets())
-    
-    io.sockets.emit("serverMessage","new connection on socket: "+socket.id+". Current active sockets: "+getTotalActiveSockets())
 
     //listen for data
-
-    socket.on("login attempt",function(data){
-
-
-    })
-
     socket.on('disconnect', function(){
         console.info('user disconnected from socket: ' + socket.id+" Current active sockets: "+getTotalActiveSockets());
         playerLookup[socket.id].isActive=false

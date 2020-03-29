@@ -11,54 +11,35 @@ var gridUnitSize=50
 
 //get html assets
 var canvas = document.getElementById('canvas'),
-    context = canvas.getContext('2d'),
-    serverInfo = document.getElementById("serverinfo"),
-    pseudoServerInfo = document.getElementById("pseudoServerInfo"),
-    startServerButton = document.getElementById("startServerButton"),
-    joinCodeInput = document.getElementById("joinCodeInput"),
-    joinServerButton = document.getElementById("joinServerButton");
-
-
-
-var mySocketId = -1         //default as -1 
-var myJoinCode              //for players connecting to psudoServer
-var isPseudoServer = false  //server just relays data, PseudoServer manages the game 
-
-//hide scrollbar
-//document.body.style.overflow = 'hidden';
+    context = canvas.getContext('2d')
 
 
 //define objects
 
-//only used by host
-class Host{
-    constructor(id,joinCode){
-        this.id=id
-        this.joinCode=joinCode
-        this.players=[]
-        this.walls=[]//will be 2d
-    }
-}
 
-class Player{
-    constructor(x,y,id,isConnected,angle){
+class OtherPlayer{
+    constructor(x,y,id){
         this.x=x
         this.y=y
-        this.angle=angle
         this.id=id
-        this.isActive=true
+    }
+}
+class Me{
+    constructor(x,y){
+        this.x=x
+        this.y=y
+        this.isConnected=false
         this.inputs={
-            walkForward: false,
-            walkBackward: false,
-            walkRight: false,
-            walkLeft: false
+            forward: false,
+            backward: false,
+            right: false,
+            left: false
         }
         this.visibleWalls=[]
         this.visiblePlayers=[]
-        this.canSeeOtherPlayer=false
     }
 }
-var me=new Player(-1,-1,-1,false,0)//overwritten when connected to server
+var me=new Me(10,10)
 
 
 //handle inputs-----------------------------
@@ -74,9 +55,7 @@ canvas.height = window.innerHeight;
 //graphics--------------
 function drawBackground(){
     context.fillStyle = "black"
-    if(isPseudoServer)
-        context.fillStyle = "rgb(19, 19, 32)"
-    context.fillRect(0, 0, canvas.width, canvas.height)
+    context.fillRect(0, 0, canvas.width, canvas.height); 
 }
 
 //https://gamedev.stackexchange.com/questions/114898/frustum-culling-how-to-calculate-if-an-angle-is-between-another-two-angles
@@ -119,18 +98,13 @@ window.onload = function(){
         if(me.isConnected){
             uploadtimer+=deltatime
             if(uploadtimer>uploadrate){
-                // send inputs to pseudoServer
+                // send inputs to server
                 sendInputsToHost(keys[87],keys[83],keys[68],keys[65],keys[76],keys[75])
+
+                //TODO: move the player locally
             }
 
-            //render eye
-            context.beginPath();
-            context.moveTo(me.x,me.y)
-            context.fillStyle = "red"
-            context.strokeStyle="red"
-            context.arc(me.x+Math.cos(me.angle), me.y+Math.sin(me.angle), 5, 0, 2 * Math.PI);
-            context.fill();
-            context.stroke();
+            
 
             //render self
             context.fillStyle = 'blue'
@@ -170,23 +144,12 @@ window.onload = function(){
             context.fillStyle = 'blue'
             context.strokeStyle="blue"
 
-            //cover out of bounds object edges
-            /*
-
-            FIXME: works, but cuts off other players' fov
-
-            context.beginPath()
-            context.strokeStyle="black"
-            context.lineWidth=playerViewDist 
-            context.arc(me.x, me.y, (playerWallViewDist-(gridUnitSize/2)+(playerViewDist/2))*mul , me.angle+(playerViewAngle/2), me.angle-(playerViewAngle/2));
-            context.stroke()
-            context.lineWidth=gridUnitSize/2
-            */
+            
             
         }
 
         //pseudoServer stuff
-        else if(isPseudoServer){
+        else if(false){
             if(me.players.length>0){
                 me.players.forEach(function(p){
 
@@ -366,16 +329,7 @@ window.onload = function(){
 //networking out---------------------------
 
 
-//request to be host
-startServerButton.addEventListener("click", function(){
-    becomeHost()
-}); 
 
-joinServerButton.addEventListener("click",function(){
-    joinHost(joinCodeInput.value)
-    me=new Player(-1,-1,-1,false,0)
-    me.joinCode=joinCodeInput.value
-});
 
 //emmit events
 function updatePlayer(p){
@@ -385,32 +339,12 @@ function updatePlayer(p){
     });
 }
 
-function becomeHost(){
-    socket.emit("BecomeHost","plz work");
-    console.log("requested to be host")
-}
 
-function joinHost(joinCode){
-    socket.emit("joinHost",joinCode)
-    console.log("attempting to join "+joinCode)
-}
-
-function sendInputsToHost(walkForward,walkBackward,walkRight,walkLeft,turnRight,turnLeft){
-    socket.emit("clientToHost",{
-        joinCode: me.joinCode,
-        walkForward: walkForward,
-        walkBackward: walkBackward,
-        walkRight: walkRight,
-        walkLeft: walkLeft,
-        turnRight: turnRight,
-        turnLeft: turnLeft
-    })
-}
 
 //networking in---------------------------
 
 socket.on("serverPrivate",function(data){//server connection
-    if(mySocketId==-1){
+    if(me.isConnected){
         mySocketId=data
         pseudoServerInfo.innerHTML="connected to server, but not host"
     }
@@ -432,38 +366,7 @@ socket.on("clientToHost",function(data){
 
 })
 
-socket.on("ServerToHost",function(data){
-    
-    if(!isPseudoServer){//initilize server
-        isPseudoServer=true
-        console.log("server accepted request. now hosting with code "+data)
-        me=new Host(mySocketId,data)
-        pseudoServerInfo.innerHTML="PseudoServer is up on id: "+me.joinCode
-        me.walls=generateMap()
-    }
-    else{//new player
-        me.players[data]=(new Player(100,100,data,true,0))//TODO: random spawn location and angle
-        socket.emit("hostToSingleClient",{
-            targetId: data
-        })
-        console.log("new player on socket "+data)
-    }
-});
 
-
-/*
-socket.on("serverPlayerDisconnect",function(data){
-
-    for( var i = 0; i < players.length; i++){ 
-        if ( players[i].id == data) {
-            players[i].isActive=false
-
-            players.splice(i, 1);//save some memory
-        }
-     }
-})
-
-*/
 socket.on("hostToSingleClient",function(data){// should probably authenticate since no data is sent
     pseudoServerInfo.innerHTML="connected to PseudoServer"
     if(!isPseudoServer){
