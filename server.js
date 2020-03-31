@@ -116,6 +116,8 @@ function catchUpToReportedPosition(p,deltaTime){
     targetDeltaY=p.reportedPosition.y-p.serverPosition.y
     maxDeltaPosition=playerSpeedNormal*deltaTime
 
+    
+
     if(!(p.inputs.left||p.inputs.right)){//if not moving along y
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
             if(targetDeltaX<0){
@@ -125,6 +127,7 @@ function catchUpToReportedPosition(p,deltaTime){
                 targetDeltaX=maxDeltaPosition
             }
         }
+        p.serverPosition.x+=targetDeltaX
     }
     if(!(p.inputs.up||p.inputs.down)){//if not moving along x
         if(Math.abs(targetDeltaY)>maxDeltaPosition){
@@ -135,10 +138,8 @@ function catchUpToReportedPosition(p,deltaTime){
                 targetDeltaY=maxDeltaPosition
             }
         }
-    }
-    //update the serverPosition
-    p.serverPosition.x+=targetDeltaX
-    p.serverPosition.y+=targetDeltaY
+        p.serverPosition.y+=targetDeltaY
+    }    
 }
 
 //useful source

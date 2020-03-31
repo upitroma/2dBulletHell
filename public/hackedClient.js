@@ -5,7 +5,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 var uploadrate=.3//slow for testing
 
-var playerSpeedNormal=300
+var playerSpeedNormal=1000
 
 var gridUnitSize=50
 
