@@ -111,14 +111,15 @@ window.onload = function(){
             //render others
             me.visiblePlayers.forEach(function(vp){
 
-                context.beginPath();
                 context.fillStyle = 'red'
                 context.strokeStyle="red"
-                context.moveTo((vp.x)+10,(-vp.y))
-                context.arc((vp.x), (-vp.y), 10, 0, 2 * Math.PI);
+                context.beginPath();
+                context.moveTo(vp.x+10,vp.y)
+                context.arc(vp.x, vp.y, 10, 0, 2 * Math.PI);
                 context.closePath();
                 context.fill();
                 context.stroke();
+
                 
             })
             context.stroke();
