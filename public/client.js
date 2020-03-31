@@ -28,8 +28,8 @@ class OtherPlayer{
 
 class Me{
     constructor(){
-        this.x=0
-        this.y=0
+        this.x=100
+        this.y=100
         this.isConnected=false
         this.visibleWalls=[]
         this.visiblePlayers=[]
@@ -111,12 +111,11 @@ window.onload = function(){
             //render others
             me.visiblePlayers.forEach(function(vp){
 
-                //player
                 context.beginPath();
                 context.fillStyle = 'red'
                 context.strokeStyle="red"
-                context.moveTo((vp.x*mul)+10+me.x,(-vp.y*mul)+me.y)
-                context.arc((vp.x*mul)+me.x, (-vp.y*mul)+me.y, 10, 0, 2 * Math.PI);
+                context.moveTo((vp.x)+10,(-vp.y))
+                context.arc((vp.x), (-vp.y), 10, 0, 2 * Math.PI);
                 context.closePath();
                 context.fill();
                 context.stroke();
@@ -360,32 +359,13 @@ socket.on("serverPrivate",function(data){//server connection
     me.isConnected=true
 });
 
+me.visiblePlayers.push(new OtherPlayer(0,0,1))
 
-socket.on("hostToSingleClient",function(data){// should probably authenticate since no data is sent
-    pseudoServerInfo.innerHTML="connected to PseudoServer"
-    if(!isPseudoServer){
-        if(!me.isConnected){
-            me.x=canvas.width/2
-            me.y=canvas.height/2
-            me.isConnected=true
-            me.joinCode=joinCodeInput.value
-            console.log(me)
-        }
-        else{
-            me.visiblePlayers=[]
-            me.visibleWalls=[]
+socket.on("testPositionUpdator",function(data){//server connection
+    me.visiblePlayers[0].x=data.x
+    me.visiblePlayers[0].y=data.y
+});
 
-            for(var i=0;i<data.visiblePlayersX.length;i++){
-                //console.log(Math.atan2(data.visiblePlayersX[i],data.visiblePlayersY[i])*180/Math.PI)//0 degrees is north
-                me.visiblePlayers.push(new Player(data.visiblePlayersX[i],data.visiblePlayersY[i],-1,true,data.visiblePlayersA[i]))//relative coords
-            }
-            for(var i=0;i<data.visibleWallsX.length;i++){
-                me.visibleWalls.push(new Wall(data.visibleWallsX[i],data.visibleWallsY[i],gridUnitSize,gridUnitSize))
-            }
-            me.angle=data.angle
-        }
-    }
-})
 
 socket.on("serverMessage",function(data){
     serverInfo.innerHTML="[server]: "+data

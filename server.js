@@ -3,6 +3,8 @@ var socket = require("socket.io")
 
 const gameClockSpeed=30// hz
 
+const networkUpdateSpeed=10// hz
+
 const playerSpeedNormal=300// px/s
 
 
@@ -24,12 +26,12 @@ class Player{
         this.lastUpdateTimestamp=new Date().getTime()
 
         this.serverPosition={
-            x:0,
-            y:0
+            x:100,
+            y:100
         }
         this.reportedPosition={
-            x:0,
-            y:0
+            x:100,
+            y:100
         }
         this.inputs={
             up: false,
@@ -47,7 +49,10 @@ var io = socket(server)
 
 var clientId=0
 
+
+
 //main game loop
+var timeSinceLastNetworkUpdate=0
 function update(deltaTime){
     playerLookup.forEach(function(p){
         if(p.isActive){
@@ -64,9 +69,22 @@ function update(deltaTime){
             p.serverPosition.x+=deltaX
             p.serverPosition.y+=deltaY
 
-            console.log(p)
+            //console.log(p)
         }
     })
+    if(timeSinceLastNetworkUpdate>(1/networkUpdateSpeed)){
+        playerLookup.forEach(function(p){
+            if(p.isActive){
+                p.socket.emit("testPositionUpdator",{
+                    x: p.serverPosition.x,
+                    y: p.serverPosition.y,
+                })
+            }
+        })
+        timeSinceLastNetworkUpdate=0
+    }
+
+    timeSinceLastNetworkUpdate+=deltaTime
 }
 
 
