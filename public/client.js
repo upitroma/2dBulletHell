@@ -5,6 +5,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 var uploadrate=.3//slow for testing
 
+var playerSpeedNormal=300
 
 var gridUnitSize=50
 
@@ -24,28 +25,29 @@ class OtherPlayer{
         this.id=id
     }
 }
+
 class Me{
-    constructor(x,y){
-        this.x=x
-        this.y=y
+    constructor(){
+        this.x=10
+        this.y=10
         this.isConnected=true//false
-        this.inputs={
-            forward: false,
-            backward: false,
-            right: false,
-            left: false
-        }
         this.visibleWalls=[]
         this.visiblePlayers=[]
+        this.keybindings={
+            up: 87,
+            down: 83,
+            left: 65,
+            right: 68
+        }
     }
 }
-var me=new Me(10,10)
+var me=new Me()
 
 
 //handle inputs-----------------------------
 var keys = [];
 window.onkeyup = function(e) { keys[e.keyCode] = false; }
-window.onkeydown = function(e) { keys[e.keyCode] = true; } 
+window.onkeydown = function(e) { keys[e.keyCode] = true;} 
 keys[87]=keys[83]=keys[68]=keys[65]=keys[76]=keys[75]=false
 
 //canvas setup----------------------------
@@ -79,18 +81,7 @@ var uploadtimer=0
 window.onload = function(){
     
     function update(deltatime){
-        /*
-        37 left
-        39 right
-        87 w
-        65 a
-        83 s
-        68 d
-        75 k
-        76 l
-        81 q
-        69 e
-        */
+
         canvas.width=canvas.width//refresh canvas
         drawBackground()
 
@@ -98,15 +89,15 @@ window.onload = function(){
         if(me.isConnected){
             uploadtimer+=deltatime
             if(uploadtimer>uploadrate){
-                // send inputs to server
-                //sendInputsToHost(keys[87],keys[83],keys[68],keys[65],keys[76],keys[75])
-
-                //TODO: move the player locally
+                updatePlayer()                
             }
 
-            
+            //move player locally
+            moveMe(deltatime)
+
 
             //render self
+            //TODO: translate absolute coords to relative(to screen size)
             context.fillStyle = 'blue'
             context.strokeStyle="blue"
             context.beginPath();
@@ -326,19 +317,40 @@ window.onload = function(){
 }
 
 
-//networking out---------------------------
-
-
-
-
-//emmit events
-function updatePlayer(p){
-    socket.emit("playerdata",{
-        x: p.x,
-        y: p.y
-    });
+function moveMe(deltaTime){
+    //TODO: use absolute coords
+    var deltaY = (
+        keys[me.keybindings.down]*playerSpeedNormal*deltaTime
+        - keys[me.keybindings.up]*playerSpeedNormal*deltaTime
+    )
+    var deltaX=(
+        keys[me.keybindings.right]*playerSpeedNormal*deltaTime
+        - keys[me.keybindings.left]*playerSpeedNormal*deltaTime
+    )
+    //TODO: collision
+    //TODO: stop from going off screen
+    //TODO: scale speed to screen size
+    me.x+=deltaX
+    me.y+=deltaY
 }
 
+
+//networking out---------------------------
+
+//emmit events
+
+function updatePlayer(){
+    p=me
+    socket.emit("playerData",{
+        //translate to absolute coordinates
+        x: p.x,
+        y: p.y,
+        up: keys[me.keybindings.up],
+        down: keys[me.keybindings.down],
+        left: keys[me.keybindings.left],
+        right: keys[me.keybindings.right],
+    });
+}
 
 
 //networking in---------------------------

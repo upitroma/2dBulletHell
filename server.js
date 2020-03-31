@@ -1,6 +1,8 @@
 var express = require("express")
 var socket = require("socket.io")
 
+const gameClockSpeed=30//hz
+
 
 
 //app setup
@@ -31,14 +33,29 @@ var io = socket(server)
 
 var clientId=0
 
+//main game loop
+function update(deltaTime){
+    console.log(deltaTime)
+}
+
+
+//tick
+//https://www.reddit.com/r/gamedev/comments/16wekk/delta_time_based_movement_did_i_get_this_right/
+var lastFrameTimeStamp=0
+setInterval(function(){
+    update((new Date().getTime() - lastFrameTimeStamp)/1000)
+    lastFrameTimeStamp=new Date().getTime()
+    },
+    1000/gameClockSpeed//delay between frames
+)
+
 //useful source
 //https://gist.github.com/alexpchin/3f257d0bb813e2c8c476
-
 
 io.on("connection",function(socket){
     socket.id=clientId++
     playerLookup[socket.id]=new Player(socket)
-    playerLookup[socket.id].socket.emit("serverPrivate",socket.id)
+    playerLookup[socket.id].socket.emit("serverPrivate","connected on socket: "+socket.id)
 
     console.log("client connected on socket: ",socket.id +" Current active sockets: "+getTotalActiveSockets())
 
@@ -49,6 +66,11 @@ io.on("connection",function(socket){
         io.sockets.emit("serverMessage","user disconnected on socket: "+socket.id+". Current active sockets: "+getTotalActiveSockets())
         io.sockets.emit("serverPlayerDisconnect",socket.id)
     });
+
+    socket.on("playerData",function(data){
+        //console.log(data)
+        //TODO: actually use function
+    })
 });
 
 
@@ -77,14 +99,3 @@ function getTotalActiveSockets(){
     return total
 }
 
-
-
-//security
-var usedIDs=[]
-function generateHostId(){
-    var r = Math.floor(Math.random() * 100000)
-    while (usedIDs.includes(r)){
-        r = Math.floor(Math.random() * 100000)
-    }
-    return r
-}
