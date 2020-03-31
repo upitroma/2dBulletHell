@@ -1,7 +1,9 @@
 var express = require("express")
 var socket = require("socket.io")
 
-const gameClockSpeed=30//hz
+const gameClockSpeed=30// hz
+
+const playerSpeedNormal=300// px/s
 
 
 
@@ -19,9 +21,21 @@ class Player{
         this.socket=socket
         this.isActive=true
 
-        this.position={
+        this.lastUpdateTimestamp=new Date().getTime()
+
+        this.serverPosition={
             x:0,
             y:0
+        }
+        this.reportedPosition={
+            x:0,
+            y:0
+        }
+        this.inputs={
+            up: false,
+            down: false,
+            left: false,
+            right: false,
         }
     }
 }
@@ -35,7 +49,24 @@ var clientId=0
 
 //main game loop
 function update(deltaTime){
-    console.log(deltaTime)
+    playerLookup.forEach(function(p){
+        if(p.isActive){
+            var deltaY = (
+                p.inputs.down*playerSpeedNormal*deltaTime
+                - p.inputs.up*playerSpeedNormal*deltaTime
+            )
+            var deltaX=(
+                p.inputs.right*playerSpeedNormal*deltaTime
+                - p.inputs.left*playerSpeedNormal*deltaTime
+            )
+            //TODO: collision
+            //TODO: stop from going off screen
+            p.serverPosition.x+=deltaX
+            p.serverPosition.y+=deltaY
+
+            console.log(p)
+        }
+    })
 }
 
 
@@ -68,8 +99,14 @@ io.on("connection",function(socket){
     });
 
     socket.on("playerData",function(data){
-        //console.log(data)
-        //TODO: actually use function
+        //record data
+        playerLookup[socket.id].reportedPosition.x=data.x
+        playerLookup[socket.id].reportedPosition.y=data.y
+        playerLookup[socket.id].inputs.up=data.up
+        playerLookup[socket.id].inputs.down=data.down
+        playerLookup[socket.id].inputs.left=data.left
+        playerLookup[socket.id].inputs.right=data.right
+        playerLookup[socket.id].lastUpdateTimestamp=new Date().getTime()
     })
 });
 

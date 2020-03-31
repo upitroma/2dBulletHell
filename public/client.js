@@ -28,9 +28,9 @@ class OtherPlayer{
 
 class Me{
     constructor(){
-        this.x=10
-        this.y=10
-        this.isConnected=true//false
+        this.x=0
+        this.y=0
+        this.isConnected=false
         this.visibleWalls=[]
         this.visiblePlayers=[]
         this.keybindings={
@@ -357,6 +357,7 @@ function updatePlayer(){
 
 socket.on("serverPrivate",function(data){//server connection
     console.log("serverPrivate "+data)
+    me.isConnected=true
 });
 
 
