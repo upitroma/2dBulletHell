@@ -9,6 +9,7 @@ const playerSpeedNormal=300// px/s
 
 
 
+
 //app setup
 var app = express();
 var server = app.listen(4000,function(){
@@ -69,7 +70,19 @@ function update(deltaTime){
             p.serverPosition.x+=deltaX
             p.serverPosition.y+=deltaY
 
-            //console.log(p)
+            //console.log(p.inputs)
+
+            //TODO: snap player to server position if too far away
+            if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
+                ((p.reportedPosition.y-p.serverPosition.y)*(p.reportedPosition.y-p.serverPosition.y))
+                >100*100)//threshold^2
+                {
+                    //console.log("too far away. server should snap player to serverPosition")
+                }
+            
+            //if player is not moving, keep moving player to correct position
+            catchUpToReportedPosition(p,deltaTime)
+
         }
     })
     if(timeSinceLastNetworkUpdate>(1/networkUpdateSpeed)){
@@ -97,6 +110,36 @@ setInterval(function(){
     },
     1000/gameClockSpeed//delay between frames
 )
+
+function catchUpToReportedPosition(p,deltaTime){
+    targetDeltaX=p.reportedPosition.x-p.serverPosition.x
+    targetDeltaY=p.reportedPosition.y-p.serverPosition.y
+    maxDeltaPosition=playerSpeedNormal*deltaTime
+
+    if(!(p.inputs.left||p.inputs.right)){//if not moving along y
+        if(Math.abs(targetDeltaX)>maxDeltaPosition){
+            if(targetDeltaX<0){
+                targetDeltaX=-maxDeltaPosition
+            }
+            else{
+                targetDeltaX=maxDeltaPosition
+            }
+        }
+    }
+    if(!(p.inputs.up||p.inputs.down)){//if not moving along x
+        if(Math.abs(targetDeltaY)>maxDeltaPosition){
+            if(targetDeltaY<0){
+                targetDeltaY=-maxDeltaPosition
+            }
+            else{
+                targetDeltaY=maxDeltaPosition
+            }
+        }
+    }
+    //update the serverPosition
+    p.serverPosition.x+=targetDeltaX
+    p.serverPosition.y+=targetDeltaY
+}
 
 //useful source
 //https://gist.github.com/alexpchin/3f257d0bb813e2c8c476
