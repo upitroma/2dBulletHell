@@ -20,6 +20,7 @@ var canvas = document.getElementById('canvas'),
 
 class OtherPlayer{
     constructor(x,y){
+        this.isActive=true
         this.x=x
         this.y=y
 
@@ -121,17 +122,16 @@ window.onload = function(){
 
             //render others
             me.visiblePlayers.forEach(function(vp){
-
-                context.fillStyle = 'red'
-                context.strokeStyle="red"
-                context.beginPath();
-                context.moveTo(vp.x+10,vp.y)
-                context.arc(vp.x, vp.y, 10, 0, 2 * Math.PI);
-                context.closePath();
-                context.fill();
-                context.stroke();
-
-                
+                if(vp.isActive){
+                    context.fillStyle = 'red'
+                    context.strokeStyle="red"
+                    context.beginPath();
+                    context.moveTo(vp.x+10,vp.y)
+                    context.arc(vp.x, vp.y, 10, 0, 2 * Math.PI);
+                    context.closePath();
+                    context.fill();
+                    context.stroke();
+                }   
             })
             context.stroke();
 
@@ -458,6 +458,7 @@ socket.on("serverMessage",function(data){
 })
 
 socket.on("serverPlayerDisconnect",function(data){
-    me.visiblePlayers.splice(data,1)//remove player from array
+    me.visiblePlayers[data].isActive=false
+    //TODO: remove player from array
     //FIXME: it dosen't work
 })
