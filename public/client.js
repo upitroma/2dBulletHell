@@ -348,12 +348,39 @@ function moveOthers(deltaTime){
 
     
     me.visiblePlayers.forEach(function(p){
+
+
+        //TODO: uncomment interpolation at least
+
         //Extrapolation
         
         //extrapolate(p,deltaTime)
 
         //Interpolation
-        targetDeltaX=p.tx-p.x
+        interpolate(p,deltaTime)
+        /*
+        p.x=p.tx
+        p.y=p.ty
+        */
+        
+    })
+}
+
+function extrapolate(p,deltaTime){
+    var deltaY = (
+        p.inputs.down*playerSpeedNormal*deltaTime
+        - p.inputs.up*playerSpeedNormal*deltaTime
+    )
+    var deltaX = (
+        p.inputs.right*playerSpeedNormal*deltaTime
+        - p.inputs.left*playerSpeedNormal*deltaTime
+    )
+    p.tx+=deltaX
+    p.ty+=deltaY
+}
+
+function interpolate(p,deltaTime){
+    targetDeltaX=p.tx-p.x
         targetDeltaY=p.ty-p.y
         maxDeltaPosition=playerSpeedNormal*deltaTime
 
@@ -378,22 +405,6 @@ function moveOthers(deltaTime){
             }
         }
         p.y+=targetDeltaY
-        
-        
-    })
-}
-
-function extrapolate(p,deltaTime){
-    var deltaY = (
-        p.inputs.down*playerSpeedNormal*deltaTime
-        - p.inputs.up*playerSpeedNormal*deltaTime
-    )
-    var deltaX = (
-        p.inputs.right*playerSpeedNormal*deltaTime
-        - p.inputs.left*playerSpeedNormal*deltaTime
-    )
-    p.tx+=deltaX
-    p.ty+=deltaY
 }
 
 

@@ -99,6 +99,10 @@ setInterval(function(){
     1000/gameClockSpeed//hz to s
 )
 
+//TODO: hard code these once figured out
+var DEV_exterpolateMul=.3
+var DEV_interpolateMul=.7
+
 function exterpolate(p,deltaTime){
     var deltaY = (
         p.inputs.down*playerSpeedNormal*deltaTime
@@ -110,8 +114,8 @@ function exterpolate(p,deltaTime){
     )
     //TODO: collision
     //TODO: stop from going off screen
-    p.serverPosition.x+=deltaX
-    p.serverPosition.y+=deltaY
+    p.serverPosition.x+=deltaX*DEV_exterpolateMul
+    p.serverPosition.y+=deltaY*DEV_exterpolateMul
 
 
     //TODO: snap player to server position if too far away
@@ -128,29 +132,29 @@ function catchUpToReportedPosition(p,deltaTime){
     targetDeltaY=p.reportedPosition.y-p.serverPosition.y
     maxDeltaPosition=playerSpeedNormal*deltaTime
 
-    if((!p.inputs.left)&&targetDeltaX<0){//left
+    if(targetDeltaX<0){//left
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
             targetDeltaX=-maxDeltaPosition
         }
-        p.serverPosition.x+=targetDeltaX
+        p.serverPosition.x+=targetDeltaX*DEV_interpolateMul
     }
-    if((!p.inputs.right)&&targetDeltaX>0){//right
+    if(targetDeltaX>0){//right
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
             targetDeltaX=+maxDeltaPosition
         }
-        p.serverPosition.x+=targetDeltaX
+        p.serverPosition.x+=targetDeltaX*DEV_interpolateMul
     }
-    if((!p.inputs.up)&&targetDeltaY>0){//up
+    if(targetDeltaY>0){//up
         if(Math.abs(targetDeltaY)>maxDeltaPosition){
             targetDeltaY=+maxDeltaPosition
         }
-        p.serverPosition.y+=targetDeltaY
+        p.serverPosition.y+=targetDeltaY*DEV_interpolateMul
     }
-    if((!p.inputs.down)&&targetDeltaY<0){//down
+    if(targetDeltaY<0){//down
         if(Math.abs(targetDeltaY)>maxDeltaPosition){
             targetDeltaY=-maxDeltaPosition
         }
-        p.serverPosition.y+=targetDeltaY
+        p.serverPosition.y+=targetDeltaY*DEV_interpolateMul
     }
 
 }
