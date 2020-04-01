@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 //TODO: var for overall size of the game
 
-var uploadrate=.3//slow for testing
+var uploadrate=.3 //slow for lag testing .3
 
 var playerSpeedNormal=300
 
@@ -19,10 +19,19 @@ var canvas = document.getElementById('canvas'),
 
 
 class OtherPlayer{
-    constructor(x,y,id){
+    constructor(x,y){
         this.x=x
         this.y=y
-        this.id=id
+
+        this.tx=x
+        this.ty=y
+
+        this.inputs={//for extrapolation only
+            up: false,
+            down: false,
+            left: false,
+            right: false,
+        }
     }
 }
 
@@ -89,11 +98,13 @@ window.onload = function(){
         if(me.isConnected){
             uploadtimer+=deltatime
             if(uploadtimer>uploadrate){
-                updatePlayer()                
+                updatePlayer()
+                uploadtimer=0                
             }
 
             //move player locally
             moveMe(deltatime)
+            moveOthers(deltatime)
 
 
             //render self
@@ -333,6 +344,57 @@ function moveMe(deltaTime){
     me.x+=deltaX
     me.y+=deltaY
 }
+function moveOthers(deltaTime){
+
+    
+    me.visiblePlayers.forEach(function(p){
+        //Extrapolation
+        
+        extrapolate(p,deltaTime)
+
+        //Interpolation
+        targetDeltaX=p.tx-p.x
+        targetDeltaY=p.ty-p.y
+        maxDeltaPosition=playerSpeedNormal*deltaTime
+
+        
+        if(Math.abs(targetDeltaX)>maxDeltaPosition){
+            if(targetDeltaX<0){
+                targetDeltaX=-maxDeltaPosition
+            }
+            else{
+                targetDeltaX=maxDeltaPosition
+            }
+        }
+        p.x+=targetDeltaX
+        
+        
+        if(Math.abs(targetDeltaY)>maxDeltaPosition){
+            if(targetDeltaY<0){
+                targetDeltaY=-maxDeltaPosition
+            }
+            else{
+                targetDeltaY=maxDeltaPosition
+            }
+        }
+        p.y+=targetDeltaY
+        
+        
+    })
+}
+
+function extrapolate(p,deltaTime){
+    var deltaY = (
+        p.inputs.down*playerSpeedNormal*deltaTime
+        - p.inputs.up*playerSpeedNormal*deltaTime
+    )
+    var deltaX = (
+        p.inputs.right*playerSpeedNormal*deltaTime
+        - p.inputs.left*playerSpeedNormal*deltaTime
+    )
+    p.tx+=deltaX
+    p.ty+=deltaY
+}
 
 
 //networking out---------------------------
@@ -363,13 +425,28 @@ socket.on("serverPrivate",function(data){//server connection
 me.visiblePlayers.push(new OtherPlayer(0,0,1))
 
 socket.on("testPositionUpdator",function(data){//server connection
-    me.visiblePlayers=[]
+
     for(i=0;i<data.length;i++){
-        me.visiblePlayers.push(new OtherPlayer(data[i].x, data[i].y, i))//replace last i with username or something
+        if(typeof me.visiblePlayers[data[i].id] != "undefined"){
+            me.visiblePlayers[data[i].id].tx=data[i].x
+            me.visiblePlayers[data[i].id].ty=data[i].y
+        }
+        else{
+            console.log(typeof me.visiblePlayers[data[i].id])
+            me.visiblePlayers[data[i].id]=new OtherPlayer(data[i].x, data[i].y)
+            
+        }
+        
+        me.visiblePlayers[data[i].id].inputs=data[i].inputs
     }
 });
 
 
 socket.on("serverMessage",function(data){
     console.log(data)
+})
+
+socket.on("serverPlayerDisconnect",function(data){
+    me.visiblePlayers.splice(data,1)//remove player from array
+    //FIXME: it dosen't work
 })

@@ -70,7 +70,6 @@ function update(deltaTime){
             p.serverPosition.x+=deltaX
             p.serverPosition.y+=deltaY
 
-            //console.log(p.inputs)
 
             //TODO: snap player to server position if too far away
             if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
@@ -91,14 +90,15 @@ function update(deltaTime){
             if(p.isActive){
                 playerPackets.push({
                     x:p.serverPosition.x,
-                    y:p.serverPosition.y
+                    y:p.serverPosition.y,
+                    inputs: p.inputs,
+                    id: p.socket.id
                 })
             }
         })
         playerLookup.forEach(function(p){
             if(p.isActive){
                 p.socket.emit("testPositionUpdator",playerPackets)
-                console.log(playerPackets)
             }
         })
         timeSinceLastNetworkUpdate=0
