@@ -363,12 +363,13 @@ socket.on("serverPrivate",function(data){//server connection
 me.visiblePlayers.push(new OtherPlayer(0,0,1))
 
 socket.on("testPositionUpdator",function(data){//server connection
-    me.visiblePlayers[0].x=data.x
-    me.visiblePlayers[0].y=data.y
+    me.visiblePlayers=[]
+    for(i=0;i<data.length;i++){
+        me.visiblePlayers.push(new OtherPlayer(data[i].x, data[i].y, i))//replace last i with username or something
+    }
 });
 
 
 socket.on("serverMessage",function(data){
-    serverInfo.innerHTML="[server]: "+data
-    console.log(serverInfo.innerHTML="[server]: "+data)
+    console.log(data)
 })

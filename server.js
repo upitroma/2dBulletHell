@@ -80,18 +80,25 @@ function update(deltaTime){
                     //console.log("too far away. server should snap player to serverPosition")
                 }
             
-            //if player is not moving, keep moving player to correct position
+            //if player is not moving, keep moving player to reportedPosition
             catchUpToReportedPosition(p,deltaTime)
 
         }
     })
     if(timeSinceLastNetworkUpdate>(1/networkUpdateSpeed)){
+        playerPackets=[]
         playerLookup.forEach(function(p){
             if(p.isActive){
-                p.socket.emit("testPositionUpdator",{
-                    x: p.serverPosition.x,
-                    y: p.serverPosition.y,
+                playerPackets.push({
+                    x:p.serverPosition.x,
+                    y:p.serverPosition.y
                 })
+            }
+        })
+        playerLookup.forEach(function(p){
+            if(p.isActive){
+                p.socket.emit("testPositionUpdator",playerPackets)
+                console.log(playerPackets)
             }
         })
         timeSinceLastNetworkUpdate=0
@@ -108,7 +115,7 @@ setInterval(function(){
     update((new Date().getTime() - lastFrameTimeStamp)/1000)
     lastFrameTimeStamp=new Date().getTime()
     },
-    1000/gameClockSpeed//delay between frames
+    1000/gameClockSpeed//hz to s
 )
 
 function catchUpToReportedPosition(p,deltaTime){
