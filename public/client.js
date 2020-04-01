@@ -350,7 +350,7 @@ function moveOthers(deltaTime){
     me.visiblePlayers.forEach(function(p){
         //Extrapolation
         
-        extrapolate(p,deltaTime)
+        //extrapolate(p,deltaTime)
 
         //Interpolation
         targetDeltaX=p.tx-p.x
