@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 //TODO: var for overall size of the game
 
-var uploadrate=.3 //slow for lag testing .3
+var uploadrate=.3 //slow for lag testing .3, can be set to 0
 
 var playerSpeedNormal=300
 
