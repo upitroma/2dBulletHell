@@ -57,29 +57,10 @@ var timeSinceLastNetworkUpdate=0
 function update(deltaTime){
     playerLookup.forEach(function(p){
         if(p.isActive){
-            var deltaY = (
-                p.inputs.down*playerSpeedNormal*deltaTime
-                - p.inputs.up*playerSpeedNormal*deltaTime
-            )
-            var deltaX=(
-                p.inputs.right*playerSpeedNormal*deltaTime
-                - p.inputs.left*playerSpeedNormal*deltaTime
-            )
-            //TODO: collision
-            //TODO: stop from going off screen
-            p.serverPosition.x+=deltaX
-            p.serverPosition.y+=deltaY
 
-
-            //TODO: snap player to server position if too far away
-            if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
-                ((p.reportedPosition.y-p.serverPosition.y)*(p.reportedPosition.y-p.serverPosition.y))
-                >100*100)//threshold^2
-                {
-                    //console.log("too far away. server should snap player to serverPosition")
-                }
+            exterpolate(p,deltaTime)
             
-            //if player is not moving, keep moving player to reportedPosition
+            //keep moving player to reportedPosition when possible
             catchUpToReportedPosition(p,deltaTime)
 
         }
@@ -118,35 +99,60 @@ setInterval(function(){
     1000/gameClockSpeed//hz to s
 )
 
+function exterpolate(p,deltaTime){
+    var deltaY = (
+        p.inputs.down*playerSpeedNormal*deltaTime
+        - p.inputs.up*playerSpeedNormal*deltaTime
+    )
+    var deltaX=(
+        p.inputs.right*playerSpeedNormal*deltaTime
+        - p.inputs.left*playerSpeedNormal*deltaTime
+    )
+    //TODO: collision
+    //TODO: stop from going off screen
+    p.serverPosition.x+=deltaX
+    p.serverPosition.y+=deltaY
+
+
+    //TODO: snap player to server position if too far away
+    if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
+        ((p.reportedPosition.y-p.serverPosition.y)*(p.reportedPosition.y-p.serverPosition.y))
+        >100*100)//threshold^2
+        {
+            //console.log("too far away. server should snap player to serverPosition")
+        }
+}
+
 function catchUpToReportedPosition(p,deltaTime){
     targetDeltaX=p.reportedPosition.x-p.serverPosition.x
     targetDeltaY=p.reportedPosition.y-p.serverPosition.y
     maxDeltaPosition=playerSpeedNormal*deltaTime
 
-    
-
-    if(!(p.inputs.left||p.inputs.right)){//if not moving along y
+    if((!p.inputs.left)&&targetDeltaX<0){//left
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
-            if(targetDeltaX<0){
-                targetDeltaX=-maxDeltaPosition
-            }
-            else{
-                targetDeltaX=maxDeltaPosition
-            }
+            targetDeltaX=-maxDeltaPosition
         }
         p.serverPosition.x+=targetDeltaX
     }
-    if(!(p.inputs.up||p.inputs.down)){//if not moving along x
+    if((!p.inputs.right)&&targetDeltaX>0){//right
+        if(Math.abs(targetDeltaX)>maxDeltaPosition){
+            targetDeltaX=+maxDeltaPosition
+        }
+        p.serverPosition.x+=targetDeltaX
+    }
+    if((!p.inputs.up)&&targetDeltaY>0){//up
         if(Math.abs(targetDeltaY)>maxDeltaPosition){
-            if(targetDeltaY<0){
-                targetDeltaY=-maxDeltaPosition
-            }
-            else{
-                targetDeltaY=maxDeltaPosition
-            }
+            targetDeltaY=+maxDeltaPosition
         }
         p.serverPosition.y+=targetDeltaY
-    }    
+    }
+    if((!p.inputs.down)&&targetDeltaY<0){//down
+        if(Math.abs(targetDeltaY)>maxDeltaPosition){
+            targetDeltaY=-maxDeltaPosition
+        }
+        p.serverPosition.y+=targetDeltaY
+    }
+
 }
 
 //useful source
