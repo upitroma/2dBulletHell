@@ -1,7 +1,7 @@
 var express = require("express")
 var socket = require("socket.io")
 
-const gameClockSpeed=30// hz
+const gameClockSpeed=60// hz
 
 const networkUpdateSpeed=10// hz
 
@@ -100,8 +100,8 @@ setInterval(function(){
 )
 
 //TODO: hard code these once figured out
-var DEV_exterpolateMul=.3
-var DEV_interpolateMul=.7
+var DEV_exterpolateMul=0
+var DEV_interpolateMul=1
 
 function exterpolate(p,deltaTime){
     var deltaY = (
