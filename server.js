@@ -61,7 +61,7 @@ function update(deltaTime){
             exterpolate(p,deltaTime)
             
             //keep moving player to reportedPosition when possible
-            catchUpToReportedPosition(p,deltaTime)
+            interpolate(p,deltaTime)
 
         }
     })
@@ -127,35 +127,30 @@ function exterpolate(p,deltaTime){
         }
 }
 
-function catchUpToReportedPosition(p,deltaTime){
+//TODO: switch to extrapolation if client goes offline for a bit, then snap them back when they come online
+function interpolate(p,deltaTime){
     targetDeltaX=p.reportedPosition.x-p.serverPosition.x
     targetDeltaY=p.reportedPosition.y-p.serverPosition.y
     maxDeltaPosition=playerSpeedNormal*deltaTime
 
-    if(targetDeltaX<0){//left
+    angle = Math.atan2(p.reportedPosition.y-p.serverPosition.y, p.reportedPosition.x-p.serverPosition.x);
+    
+    maxDeltaX=(Math.cos(angle))*playerSpeedNormal*deltaTime
+    maxDeltaY=(Math.sin(angle))*playerSpeedNormal*deltaTime
+
+    if(targetDeltaX!=0){//x
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
-            targetDeltaX=-maxDeltaPosition
+            targetDeltaX=+maxDeltaX
         }
         p.serverPosition.x+=targetDeltaX*DEV_interpolateMul
     }
-    if(targetDeltaX>0){//right
-        if(Math.abs(targetDeltaX)>maxDeltaPosition){
-            targetDeltaX=+maxDeltaPosition
-        }
-        p.serverPosition.x+=targetDeltaX*DEV_interpolateMul
-    }
-    if(targetDeltaY>0){//up
+    if(targetDeltaY!=0){//y
         if(Math.abs(targetDeltaY)>maxDeltaPosition){
-            targetDeltaY=+maxDeltaPosition
+            targetDeltaY=+maxDeltaY
         }
         p.serverPosition.y+=targetDeltaY*DEV_interpolateMul
     }
-    if(targetDeltaY<0){//down
-        if(Math.abs(targetDeltaY)>maxDeltaPosition){
-            targetDeltaY=-maxDeltaPosition
-        }
-        p.serverPosition.y+=targetDeltaY*DEV_interpolateMul
-    }
+    
 
 }
 

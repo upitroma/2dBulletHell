@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 //TODO: var for overall size of the game
 
-var uploadrate=.3 //slow for lag testing, will be set to 0
+var uploadrate=.1 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300
 
@@ -329,6 +329,9 @@ window.onload = function(){
 
 
 function moveMe(deltaTime){
+
+
+    
     //TODO: use absolute coords
     var deltaY = (
         keys[me.keybindings.down]*playerSpeedNormal*deltaTime
@@ -338,11 +341,15 @@ function moveMe(deltaTime){
         keys[me.keybindings.right]*playerSpeedNormal*deltaTime
         - keys[me.keybindings.left]*playerSpeedNormal*deltaTime
     )
+
+    angle = Math.atan2(deltaY, deltaX);
+    
+    me.x+=(Math.cos(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.right]||keys[me.keybindings.left])
+    me.y+=(Math.sin(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.down]||keys[me.keybindings.up])
     //TODO: collision
     //TODO: stop from going off screen
     //TODO: scale speed to screen size
-    me.x+=deltaX
-    me.y+=deltaY
+    
 }
 function moveOthers(deltaTime){
 
