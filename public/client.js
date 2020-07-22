@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 //TODO: var for overall size of the game
 
-var uploadrate=.1 //slow for lag testing, will be set to 0
+var uploadrate=0 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300
 
@@ -148,165 +148,7 @@ window.onload = function(){
 
             
             
-        }
-
-        //pseudoServer stuff
-        else if(false){
-            if(me.players.length>0){
-                me.players.forEach(function(p){
-
-                    //player movement
-                    //y is inverted
-                    var deltaY = (
-                        p.inputs.walkBackward*playerSpeedNormal*deltatime*(p.canSeeOtherPlayer+1) 
-                        - p.inputs.walkForward*playerSpeedNormal*deltatime*(p.canSeeOtherPlayer+1)
-                    )
-                    var deltaX=(
-                        p.inputs.walkRight*playerSpeedNormal*deltatime*(p.canSeeOtherPlayer+1)
-                        -p.inputs.walkLeft*playerSpeedNormal*deltatime*(p.canSeeOtherPlayer+1)
-                    )
-
-                    
-                    
-
-                    //angle stuff
-                    p.angle+=p.inputs.turnRight*playerTurnSpeed*deltatime*(p.canSeeOtherPlayer+1)
-                    p.angle-=p.inputs.turnLeft*playerTurnSpeed*deltatime*(p.canSeeOtherPlayer+1)
-                    if(p.angle>(2*Math.PI)){
-                        p.angle=0
-                    }
-                    else if(p.angle<0){
-                        p.angle=2*Math.PI
-                    }
-
-                    //calculate what player can see
-                    p.canSeeOtherPlayer=false
-                    var tempVpsx=[]
-                    var tempVpsy=[]
-                    var tempVpsa=[]
-                    var tempWallsX=[]
-                    var tempWallsY=[]
-                    me.players.forEach(function(vp){//calculate visible players-------------------
-                        if(vp!=p){//oviously you can see yourself
-
-                            //if in view range
-                            if(((vp.x-p.x)*(vp.x-p.x))+((vp.y-p.y)*(vp.y-p.y))<playerViewDist*playerViewDist){//if inside circle
-
-                                if (Math.abs(deltaAngle(p.x,p.y,p.angle,vp.x,vp.y))<=playerViewAngle/2){//if in viewing angle
-
-                                    //TODO: factor in walls in the way
-
-                                    //relative coordinates
-                                    tempVpsx.push(vp.x-p.x)
-                                    tempVpsy.push(p.y-vp.y)
-                                    tempVpsa.push(vp.angle)
-                                    p.canSeeOtherPlayer=true
-                                }
-
-                                /*
-                                FIXME: 
-                                right now, objects are only rendered if their center is in the fov.
-                                this causes objects to seem to teleport into view
-                                this may be solved by increasing the fov a bit, bit i'd rather not hardcode
-                                */
-                                
-                            }
-                        }
-                    })
-
-                    //calculate visible walls
-                    me.walls.forEach(function(r){
-                        r.forEach(function(w){
-                            if(w!=null){
-                                if(((w.centerX-p.x)*(w.centerX-p.x))+((w.centerY-p.y)*(w.centerY-p.y))<playerViewDist*playerViewDist){
-                                    if (Math.abs(deltaAngle(p.x,p.y,p.angle,w.centerX,w.centerY))<=playerViewAngle){
-                                        tempWallsX.push(w.x1-p.x)
-                                        tempWallsY.push(p.y-w.y1)
-                                    }
-                                    else if(((w.centerX-p.x)*(w.centerX-p.x))+((w.centerY-p.y)*(w.centerY-p.y))<playerWallViewDist*playerWallViewDist){
-                                        tempWallsX.push(w.x1-p.x)
-                                        tempWallsY.push(p.y-w.y1)
-                                    }
-
-                                    //x collision
-                                    if(p.x+deltaX<w.x2 && p.x+deltaX>w.x1){
-                                        //console.log("collision on x")
-                                        if(p.y<w.y2 && p.y>w.y1){  
-                                            deltaX=0
-                                        }
-                                    }
-                                    //y collision
-                                    if(p.x<w.x2 && p.x>w.x1){
-                                        //console.log("collision on x")
-                                        if(p.y+deltaY<w.y2 && p.y+deltaY>w.y1){  
-                                            deltaY=0
-                                        }
-                                    }
-                                    
-                                }
-                            }
-                        })
-                    })
-
-                    p.y+=deltaY
-                    p.x+=deltaX
-
-
-                    //debugging server graphics-----------------
-                    context.beginPath();
-                    context.strokeStyle = 'blue';
-                    context.fillStyle = 'blue';
-                    context.moveTo(p.x+10,p.y)
-                    context.arc(p.x, p.y, 10, 0, 2 * Math.PI);// x,y, r, start angle, end angle
-                    context.fill();
-                    context.stroke();
-
-                    //debugging fov
-                    context.beginPath();
-                    context.strokeStyle = 'red';
-                    context.arc(p.x, p.y, playerViewDist, 0, 2 * Math.PI);
-                    context.stroke();
-
-                    //debugging light
-                    context.beginPath();
-                    context.strokeStyle = 'white';
-                    context.arc(p.x, p.y, playerViewDist , p.angle-(playerViewAngle/2), p.angle+(playerViewAngle/2));
-                    context.stroke();
-
-
-                    //enviroment
-                    context.strokeStyle = 'white';
-                    context.fillStyle = 'white';
-                    me.walls.forEach(function(r){
-                        r.forEach(function(w){
-                            if(w!=null){
-                                context.beginPath();
-                                context.fillRect(w.x1,w.y1,w.width,w.height)
-                                context.stroke();
-                            }
-                            
-                            //console.log(w)
-                        })
-                    })
-                    //console.log(me.walls)
-                    /*
-
-                    */
-                    
-                    //TODO: calculate what the player can see
-
-                    //send data to player
-                    socket.emit("hostToSingleClient",{
-                        targetId: p.id,
-                        angle: p.angle,
-                        visiblePlayersX: tempVpsx,
-                        visiblePlayersY: tempVpsy,
-                        visiblePlayersA: tempVpsa,
-                        visibleWallsX: tempWallsX,
-                        visibleWallsY: tempWallsY
-                    })
-                })
-            }
+        
         }
 
         context.stroke();
@@ -389,7 +231,7 @@ function extrapolate(p,deltaTime){
 function interpolate(p,deltaTime){
     targetDeltaX=p.tx-p.x
         targetDeltaY=p.ty-p.y
-        maxDeltaPosition=playerSpeedNormal*deltaTime
+        maxDeltaPosition=playerSpeedNormal*deltaTime*1.1
 
         
         if(Math.abs(targetDeltaX)>maxDeltaPosition){
