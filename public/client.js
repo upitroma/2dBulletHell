@@ -5,9 +5,7 @@ var socket = io.connect(window.location.href);//change to server's location
 
 var uploadrate=0 //slow for lag testing, will be set to 0
 
-var playerSpeedNormal=300
-
-var gridUnitSize=50
+var playerSpeedNormal=300 //must be same as server side
 
 
 //get html assets
@@ -26,13 +24,6 @@ class OtherPlayer{
 
         this.tx=x
         this.ty=y
-
-        this.inputs={//for extrapolation only
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-        }
     }
 }
 
@@ -89,8 +80,15 @@ function deltaAngle(px,py,pa,objx,objy){
 //update loop------------------------------------
 var uploadtimer=0
 window.onload = function(){
+
+    
     
     function update(deltatime){
+
+        //dynamically resize screen--------
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        drawBackground();
 
         canvas.width=canvas.width//refresh canvas
         drawBackground()
