@@ -101,7 +101,7 @@ window.onload = function(){
                 uploadtimer=0                
             }
 
-            //move player locally
+            //move players locally
             moveMe(deltatime)
             moveOthers(deltatime)
 
@@ -294,8 +294,6 @@ socket.on("testPositionUpdator",function(data){//server connection
             me.visiblePlayers[data[i].id]=new OtherPlayer(data[i].x, data[i].y)
             
         }
-        
-        me.visiblePlayers[data[i].id].inputs=data[i].inputs
     }
 });
 

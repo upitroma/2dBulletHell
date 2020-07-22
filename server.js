@@ -72,7 +72,6 @@ function update(deltaTime){
                 playerPackets.push({
                     x:p.serverPosition.x,
                     y:p.serverPosition.y,
-                    inputs: p.inputs,
                     id: p.socket.id
                 })
             }
