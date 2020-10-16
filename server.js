@@ -3,7 +3,7 @@ var socket = require("socket.io")
 
 const gameClockSpeed=60// hz
 
-const networkUpdateSpeed=10// hz
+const networkUpdateSpeed=30// hz
 
 const playerSpeedNormal=300// px/s
 
