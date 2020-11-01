@@ -199,9 +199,6 @@ function moveOthers(deltaTime){
 
         //TODO: uncomment interpolation at least
 
-        //Extrapolation
-        
-        //extrapolate(p,deltaTime)
 
         //Interpolation
         interpolate(p,deltaTime)
@@ -213,18 +210,6 @@ function moveOthers(deltaTime){
     })
 }
 
-function extrapolate(p,deltaTime){
-    var deltaY = (
-        p.inputs.down*playerSpeedNormal*deltaTime
-        - p.inputs.up*playerSpeedNormal*deltaTime
-    )
-    var deltaX = (
-        p.inputs.right*playerSpeedNormal*deltaTime
-        - p.inputs.left*playerSpeedNormal*deltaTime
-    )
-    p.tx+=deltaX
-    p.ty+=deltaY
-}
 
 function interpolate(p,deltaTime){
     targetDeltaX=p.tx-p.x
@@ -280,7 +265,7 @@ socket.on("serverPrivate",function(data){//server connection
     me.isConnected=true
 });
 
-me.visiblePlayers.push(new OtherPlayer(0,0,1))
+//me.visiblePlayers.push(new OtherPlayer(0,0,1))
 
 socket.on("testPositionUpdator",function(data){//server connection
 
@@ -290,7 +275,6 @@ socket.on("testPositionUpdator",function(data){//server connection
             me.visiblePlayers[data[i].id].ty=data[i].y
         }
         else{
-            console.log(typeof me.visiblePlayers[data[i].id])
             me.visiblePlayers[data[i].id]=new OtherPlayer(data[i].x, data[i].y)
             
         }

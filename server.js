@@ -3,11 +3,30 @@ var socket = require("socket.io")
 
 const gameClockSpeed=60// hz
 
-const networkUpdateSpeed=30// hz
+const networkUpdateSpeed=60// hz
 
 const playerSpeedNormal=300// px/s
 
+/* 
+TODO for player movement
+client authoritative, trust but verify
+client reports position and inputs,
+client reports own collision and hits.
 
+server checks the position
+    is player >110% faster than they should?
+    is player in a wall?
+    is player colliding with bullet?
+
+    if player does not report their position in time, use extrapolation
+    no server interpolation, let the clients do that themselves
+
+    if player is out of bounds, move player to last verified position
+        send new position to player and snap them to last verified position.
+
+    individual bullets should be synced for now, but only temporary since that is a lot of bandwidth.
+
+*/
 
 
 //app setup
@@ -40,6 +59,7 @@ class Player{
             left: false,
             right: false,
         }
+        this.sentUpdateSinceLastFrame=false
     }
 }
 
@@ -53,54 +73,88 @@ var clientId=0
 
 
 //main game loop
+
+
+
+
 var timeSinceLastNetworkUpdate=0
 function update(deltaTime){
     playerLookup.forEach(function(p){
-        if(p.isActive){
+        if(p.isActive){//i don't think i need this since playerLookup should be spliced
 
-            exterpolate(p,deltaTime)
+            p.serverPosition=p.reportedPosition//FULL client authoraty
+
             
-            //keep moving player to reportedPosition when possible
-            interpolate(p,deltaTime)
+            p.sentUpdateSinceLastFrame=false//reset for next frame
 
+            if(new Date().getTime() - p.lastUpdateTimestamp > 3000){
+                p.isActive=false
+                console.log(p.socket.id+" was kicked")
+            }
         }
-    })
-    if(timeSinceLastNetworkUpdate>(1/networkUpdateSpeed)){
-        playerPackets=[]
-        playerLookup.forEach(function(p){
-            if(p.isActive){
-                playerPackets.push({
-                    x:p.serverPosition.x,
-                    y:p.serverPosition.y,
-                    id: p.socket.id
-                })
-            }
-        })
-        playerLookup.forEach(function(p){
-            if(p.isActive){
-                p.socket.emit("testPositionUpdator",playerPackets)
-            }
-        })
-        timeSinceLastNetworkUpdate=0
-    }
+    });
 
-    timeSinceLastNetworkUpdate+=deltaTime
+    
 }
 
+//send data out
+function networkUpdate(){
+    playerLookup.forEach(function(p){
+        playerPackets=[]
+        if(p.isActive){
+
+            playerLookup.forEach(function(o){
+                if(o.isActive){
+                    if(o!=p){//player allready knows where they are
+                        playerPackets.push({
+                            x:o.serverPosition.x,
+                            y:o.serverPosition.y,
+                            id: o.socket.id
+                        })
+                    }
+                }
+            });
+
+
+            p.socket.emit("testPositionUpdator",playerPackets)
+
+
+            /*
+            playerPackets.push({
+                x:p.serverPosition.x,
+                y:p.serverPosition.y,
+                id: p.socket.id
+            })
+            */
+
+
+        }
+    });
+
+    
+}
 
 //tick
 //https://www.reddit.com/r/gamedev/comments/16wekk/delta_time_based_movement_did_i_get_this_right/
 var lastFrameTimeStamp=0
 setInterval(function(){
-    update((new Date().getTime() - lastFrameTimeStamp)/1000)
+    dTime=(new Date().getTime() - lastFrameTimeStamp)/1000
+
+    //game update
+    update(dTime)
+
+    //network update
+    timeSinceLastNetworkUpdate+=dTime
+    if(timeSinceLastNetworkUpdate>(1/networkUpdateSpeed)){
+        networkUpdate()
+        timeSinceLastNetworkUpdate=0
+    }
+
+
     lastFrameTimeStamp=new Date().getTime()
     },
     1000/gameClockSpeed//hz to s
 )
-
-//TODO: hard code these once figured out
-var DEV_exterpolateMul=0
-var DEV_interpolateMul=1
 
 function exterpolate(p,deltaTime){
     var deltaY = (
@@ -126,33 +180,6 @@ function exterpolate(p,deltaTime){
         }
 }
 
-//TODO: switch to extrapolation if client goes offline for a bit, then snap them back when they come online
-function interpolate(p,deltaTime){
-    targetDeltaX=p.reportedPosition.x-p.serverPosition.x
-    targetDeltaY=p.reportedPosition.y-p.serverPosition.y
-    maxDeltaPosition=playerSpeedNormal*deltaTime
-
-    angle = Math.atan2(p.reportedPosition.y-p.serverPosition.y, p.reportedPosition.x-p.serverPosition.x);
-    
-    maxDeltaX=(Math.cos(angle))*playerSpeedNormal*deltaTime
-    maxDeltaY=(Math.sin(angle))*playerSpeedNormal*deltaTime
-
-    if(targetDeltaX!=0){//x
-        if(Math.abs(targetDeltaX)>maxDeltaPosition){
-            targetDeltaX=+maxDeltaX
-        }
-        p.serverPosition.x+=targetDeltaX*DEV_interpolateMul
-    }
-    if(targetDeltaY!=0){//y
-        if(Math.abs(targetDeltaY)>maxDeltaPosition){
-            targetDeltaY=+maxDeltaY
-        }
-        p.serverPosition.y+=targetDeltaY*DEV_interpolateMul
-    }
-    
-
-}
-
 //useful source
 //https://gist.github.com/alexpchin/3f257d0bb813e2c8c476
 
@@ -160,16 +187,8 @@ io.on("connection",function(socket){
     socket.id=clientId++
     playerLookup[socket.id]=new Player(socket)
     playerLookup[socket.id].socket.emit("serverPrivate","connected on socket: "+socket.id)
-
     console.log("client connected on socket: ",socket.id +" Current active sockets: "+getTotalActiveSockets())
 
-    //listen for data
-    socket.on('disconnect', function(){
-        console.info('user disconnected from socket: ' + socket.id+" Current active sockets: "+getTotalActiveSockets());
-        playerLookup[socket.id].isActive=false
-        io.sockets.emit("serverMessage","user disconnected on socket: "+socket.id+". Current active sockets: "+getTotalActiveSockets())
-        io.sockets.emit("serverPlayerDisconnect",socket.id)
-    });
 
     socket.on("playerData",function(data){
         //record data
@@ -180,7 +199,18 @@ io.on("connection",function(socket){
         playerLookup[socket.id].inputs.left=data.left
         playerLookup[socket.id].inputs.right=data.right
         playerLookup[socket.id].lastUpdateTimestamp=new Date().getTime()
+        playerLookup[socket.id].sentUpdateSinceLastFrame=true
+        playerLookup[socket.id].updatesMissed=0
     })
+
+    socket.on('disconnect', function(){
+        console.info('user disconnected from socket: ' + socket.id+" Current active sockets: "+getTotalActiveSockets());
+        playerLookup[socket.id].isActive=false
+        io.sockets.emit("serverMessage","user disconnected on socket: "+socket.id+". Current active sockets: "+getTotalActiveSockets())
+        io.sockets.emit("serverPlayerDisconnect",socket.id)
+    });
+
+    
 });
 
 
@@ -201,11 +231,11 @@ function getIp(){
 
 function getTotalActiveSockets(){
     var total=0
-    for(var i=0;i<playerLookup.length;i++){
-        if(playerLookup[i].isActive){
+    playerLookup.forEach(function(p){
+        if(p.isActive){
             total++
         }
-    }
+    });
     return total
 }
 
