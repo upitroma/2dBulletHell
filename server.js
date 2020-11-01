@@ -3,9 +3,9 @@ var socket = require("socket.io")
 
 const gameClockSpeed=60// hz
 
-const networkUpdateSpeed=60// hz
+const networkUpdateSpeed=30// hz
 
-const playerSpeedNormal=300// px/s
+const playerSpeedNormal=700// px/s
 
 /* 
 TODO for player movement
@@ -90,6 +90,7 @@ function update(deltaTime){
             if(new Date().getTime() - p.lastUpdateTimestamp > 3000){
                 p.isActive=false
                 console.log(p.socket.id+" was kicked")
+                io.sockets.emit("serverPlayerDisconnect",p.socket.id)
             }
         }
     });

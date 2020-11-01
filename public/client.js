@@ -7,6 +7,7 @@ var uploadrate=0 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300 //must be same as server side
 
+const snapDist=50//local snap distance
 
 //get html assets
 var canvas = document.getElementById('canvas'),
@@ -22,8 +23,8 @@ class OtherPlayer{
         this.x=x
         this.y=y
 
-        this.tx=x
-        this.ty=y
+        this.sx=x
+        this.sy=y
     }
 }
 
@@ -142,10 +143,7 @@ window.onload = function(){
                 context.stroke();
             })
             context.fillStyle = 'blue'
-            context.strokeStyle="blue"
-
-            
-            
+            context.strokeStyle="blue"    
         
         }
 
@@ -197,23 +195,28 @@ function moveOthers(deltaTime){
     me.visiblePlayers.forEach(function(p){
 
 
-        //TODO: uncomment interpolation at least
 
-
-        //Interpolation
-        interpolate(p,deltaTime)
-        /*
-        p.x=p.tx
-        p.y=p.ty
-        */
         
+
+        //if player gets too far away, snap them to the correct position
+        if(Math.abs(p.sx-p.x) > snapDist){
+            p.x=p.sx
+            p.y=p.sy
+        }    
+        if(Math.abs(p.sy-p.y) > snapDist){
+            p.x=p.sx
+            p.y=p.sy
+        }
+
+
+        interpolate(p,deltaTime)
     })
 }
 
 
 function interpolate(p,deltaTime){
-    targetDeltaX=p.tx-p.x
-        targetDeltaY=p.ty-p.y
+    targetDeltaX=p.sx-p.x
+        targetDeltaY=p.sy-p.y
         maxDeltaPosition=playerSpeedNormal*deltaTime*1.1
 
         
@@ -271,8 +274,8 @@ socket.on("testPositionUpdator",function(data){//server connection
 
     for(i=0;i<data.length;i++){
         if(typeof me.visiblePlayers[data[i].id] != "undefined"){
-            me.visiblePlayers[data[i].id].tx=data[i].x
-            me.visiblePlayers[data[i].id].ty=data[i].y
+            me.visiblePlayers[data[i].id].sx=data[i].x
+            me.visiblePlayers[data[i].id].sy=data[i].y
         }
         else{
             me.visiblePlayers[data[i].id]=new OtherPlayer(data[i].x, data[i].y)
