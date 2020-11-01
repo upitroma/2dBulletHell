@@ -5,7 +5,7 @@ const gameClockSpeed=60// hz
 
 const networkUpdateSpeed=30// hz
 
-const playerSpeedNormal=700// px/s
+const playerSpeedNormal=300// px/s
 
 /* 
 TODO for player movement
