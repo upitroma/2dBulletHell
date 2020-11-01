@@ -5,8 +5,7 @@ var socket = io.connect("http://localhost:4000/");//change to server's location
 
 var uploadrate=0 //slow for lag testing, will be set to 0
 
-var playerSpeedNormal=3000 //must be same as server side
-
+var playerSpeedNormal=400 //speedhacks
 const snapDist=50//local snap distance
 
 //get html assets

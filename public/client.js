@@ -199,6 +199,7 @@ function moveOthers(deltaTime){
         
 
         //if player gets too far away, snap them to the correct position
+        //FIXME should be circular, not square
         if(Math.abs(p.sx-p.x) > snapDist){
             p.x=p.sx
             p.y=p.sy

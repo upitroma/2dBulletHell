@@ -7,6 +7,9 @@ const networkUpdateSpeed=30// hz
 
 const playerSpeedNormal=300// px/s
 
+const snapDist=50//global snap distance px
+
+
 /* 
 TODO for player movement
 client authoritative, trust but verify
@@ -84,6 +87,13 @@ function update(deltaTime){
 
             p.serverPosition=p.reportedPosition//FULL client authoraty
 
+            if(p.sentUpdateSinceLastFrame){
+                //validate position
+            }
+            else{
+                //extrapolate then validate position
+            }
+
             
             p.sentUpdateSinceLastFrame=false//reset for next frame
 
@@ -104,6 +114,7 @@ function networkUpdate(){
         playerPackets=[]
         if(p.isActive){
 
+            //TODO: only send data for players in the same room
             playerLookup.forEach(function(o){
                 if(o.isActive){
                     if(o!=p){//player allready knows where they are
@@ -115,20 +126,7 @@ function networkUpdate(){
                     }
                 }
             });
-
-
             p.socket.emit("testPositionUpdator",playerPackets)
-
-
-            /*
-            playerPackets.push({
-                x:p.serverPosition.x,
-                y:p.serverPosition.y,
-                id: p.socket.id
-            })
-            */
-
-
         }
     });
 
@@ -172,13 +170,15 @@ function exterpolate(p,deltaTime){
     p.serverPosition.y+=deltaY*DEV_exterpolateMul
 
 
+    /*
     //TODO: snap player to server position if too far away
     if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
         ((p.reportedPosition.y-p.serverPosition.y)*(p.reportedPosition.y-p.serverPosition.y))
-        >100*100)//threshold^2
+        >snapDist*snapDist)//threshold^2
         {
-            //console.log("too far away. server should snap player to serverPosition")
+            console.log("too far away. server should snap player to serverPosition")
         }
+        */
 }
 
 //useful source
