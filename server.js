@@ -7,7 +7,7 @@ const networkUpdateSpeed=30// hz
 
 const playerSpeedNormal=300// px/s
 
-const snapDist=50//global snap distance px
+const speedLeeway=100//global snap distance px
 
 
 /* 
@@ -74,24 +74,63 @@ var io = socket(server)
 var clientId=0
 
 
+function movePlayers(deltaTime){
+    
 
-//main game loop
-
-
-
-
-var timeSinceLastNetworkUpdate=0
-function update(deltaTime){
     playerLookup.forEach(function(p){
-        if(p.isActive){//i don't think i need this since playerLookup should be spliced
+        p.timeSinceLastServerPositionUpdate+=deltaTime
+        if(p.isActive){
+            //console.log(p.reportedPosition.x+" "+p.serverPosition.x)
 
-            p.serverPosition=p.reportedPosition//FULL client authoraty
+            //p.serverPosition=p.reportedPosition//FULL client authoraty
 
             if(p.sentUpdateSinceLastFrame){
-                //validate position
+
+                //check for speedhacks and lag
+                maxDist=((playerSpeedNormal+speedLeeway)*deltaTime)//time since last contact
+                
+
+                //FIXME: never triggers?
+
+                /*
+                prx=p.reportedPosition.x
+                psx=p.serverPosition.x
+                pry=p.reportedPosition.y
+                psy=p.serverPosition.y
+                deltaDist=Math.sqrt(
+                    ((prx-psx)*(prx-psx))+((pry-psy)*(pry-psy))
+                )
+
+                    */
+                //console.log(maxDist+"\t"+deltaDist)
+
+                //console.log((new Date().getTime() - p.lastUpdateTimestamp)/1000)
+
+
+                //console.log((prx-psx)/(new Date().getTime() - p.lastUpdateTimestamp))
+                
+               deltaDist=0
+
+
+                
+                if(deltaDist>maxDist)
+                {
+                    //console.log("too far away. server should snap player to serverPosition "+deltaDist+" "+maxDist)
+                    p.serverPosition.x=p.reportedPosition.x
+                    p.serverPosition.y=p.reportedPosition.y
+                }
+                else{
+                    //TODO: check for collisions
+                    p.serverPosition.x=p.reportedPosition.x
+                    p.serverPosition.y=p.reportedPosition.y
+                }
+                //
+                p.timeSinceLastServerPositionUpdate=0
             }
             else{
+                
                 //extrapolate then validate position
+                exterpolate(p,deltaTime)
             }
 
             
@@ -104,8 +143,15 @@ function update(deltaTime){
             }
         }
     });
+}
 
-    
+
+//main game loop
+
+var timeSinceLastNetworkUpdate=0
+function update(deltaTime){
+
+    movePlayers(deltaTime)
 }
 
 //send data out
@@ -166,19 +212,8 @@ function exterpolate(p,deltaTime){
     )
     //TODO: collision
     //TODO: stop from going off screen
-    p.serverPosition.x+=deltaX*DEV_exterpolateMul
-    p.serverPosition.y+=deltaY*DEV_exterpolateMul
-
-
-    /*
-    //TODO: snap player to server position if too far away
-    if( ((p.reportedPosition.x-p.serverPosition.x)*(p.reportedPosition.x-p.serverPosition.x))+
-        ((p.reportedPosition.y-p.serverPosition.y)*(p.reportedPosition.y-p.serverPosition.y))
-        >snapDist*snapDist)//threshold^2
-        {
-            console.log("too far away. server should snap player to serverPosition")
-        }
-        */
+    p.serverPosition.x+=deltaX*.5
+    p.serverPosition.y+=deltaY*.5
 }
 
 //useful source
@@ -201,7 +236,6 @@ io.on("connection",function(socket){
         playerLookup[socket.id].inputs.right=data.right
         playerLookup[socket.id].lastUpdateTimestamp=new Date().getTime()
         playerLookup[socket.id].sentUpdateSinceLastFrame=true
-        playerLookup[socket.id].updatesMissed=0
     })
 
     socket.on('disconnect', function(){

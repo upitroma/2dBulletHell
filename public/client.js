@@ -7,7 +7,7 @@ var uploadrate=0 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300 //must be same as server side
 
-const snapDist=50//local snap distance
+const snapDist=100//local snap distance
 
 //get html assets
 var canvas = document.getElementById('canvas'),
