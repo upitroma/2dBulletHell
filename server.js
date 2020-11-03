@@ -63,6 +63,9 @@ class Player{
             right: false,
         }
         this.sentUpdateSinceLastFrame=false
+
+        this.pastPositions=[]//trying to calculate eve speed
+        this.pastPositionTimestamps=[]
     }
 }
 
@@ -72,6 +75,40 @@ var playerLookup=[]
 var io = socket(server)
 
 var clientId=0
+
+
+function getAveragePlayerSpeed(p){
+    p.pastPositions.push({
+        x:p.reportedPosition.x,
+        y:p.reportedPosition.y
+    })
+    p.pastPositionTimestamps.push(p.lastUpdateTimestamp)
+    if(p.pastPositions.length>10){
+        if(p.pastPositions.length!=p.pastPositionTimestamps.length){
+            console.log("error positions and timestamps diffrent lengths")
+        }
+        p.pastPositions.splice(0,1)
+        p.pastPositionTimestamps.splice(0,1)
+
+        totalDeltaX=p.pastPositions[p.pastPositions.length-1].x-p.pastPositions[0].x
+        totalDeltaY=p.pastPositions[p.pastPositions.length-1].y-p.pastPositions[0].y
+
+        totalDeltaDist=Math.sqrt(
+            (totalDeltaX*totalDeltaX)+(totalDeltaY*totalDeltaY)
+        )
+
+        totalDeltaTime=p.pastPositionTimestamps[p.pastPositionTimestamps.length-1]-p.pastPositionTimestamps[0]
+
+        
+
+        aveSpeed=totalDeltaDist/totalDeltaTime*1000
+        return aveSpeed
+
+    }
+    else{
+        return playerSpeedNormal
+    }
+}
 
 
 function movePlayers(deltaTime){
@@ -87,27 +124,9 @@ function movePlayers(deltaTime){
             if(p.sentUpdateSinceLastFrame){
 
                 //check for speedhacks and lag
-                maxDist=((playerSpeedNormal+speedLeeway)*deltaTime)//time since last contact
-                
 
-                //FIXME: never triggers?
+                console.log(getAveragePlayerSpeed(p))
 
-                /*
-                prx=p.reportedPosition.x
-                psx=p.serverPosition.x
-                pry=p.reportedPosition.y
-                psy=p.serverPosition.y
-                deltaDist=Math.sqrt(
-                    ((prx-psx)*(prx-psx))+((pry-psy)*(pry-psy))
-                )
-
-                    */
-                //console.log(maxDist+"\t"+deltaDist)
-
-                //console.log((new Date().getTime() - p.lastUpdateTimestamp)/1000)
-
-
-                //console.log((prx-psx)/(new Date().getTime() - p.lastUpdateTimestamp))
                 
                deltaDist=0
 
