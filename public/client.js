@@ -269,8 +269,6 @@ socket.on("serverPrivate",function(data){//server connection
     me.isConnected=true
 });
 
-//me.visiblePlayers.push(new OtherPlayer(0,0,1))
-
 socket.on("testPositionUpdator",function(data){//server connection
 
     for(i=0;i<data.length;i++){
@@ -283,6 +281,13 @@ socket.on("testPositionUpdator",function(data){//server connection
             
         }
     }
+});
+
+
+socket.on("forceSnapPosition",function(data){
+    me.x=data.x
+    me.y=data.y
+    console.log("ah snap!")
 });
 
 

@@ -124,26 +124,22 @@ function movePlayers(deltaTime){
             if(p.sentUpdateSinceLastFrame){
 
                 //check for speedhacks and lag
+                aveSpeed=getAveragePlayerSpeed(p)
 
-                console.log(getAveragePlayerSpeed(p))
-
-                
-               deltaDist=0
-
-
-                
-                if(deltaDist>maxDist)
+                if(aveSpeed>playerSpeedNormal+speedLeeway)
                 {
-                    //console.log("too far away. server should snap player to serverPosition "+deltaDist+" "+maxDist)
-                    p.serverPosition.x=p.reportedPosition.x
-                    p.serverPosition.y=p.reportedPosition.y
+                    console.log("player is too fast, server should pin them in place this frame")
+                    p.socket.emit("forceSnapPosition",{
+                        x: p.serverPosition.x,
+                        y: p.serverPosition.y
+                    });
+                    //send message to player to stop them client side
                 }
                 else{
                     //TODO: check for collisions
                     p.serverPosition.x=p.reportedPosition.x
                     p.serverPosition.y=p.reportedPosition.y
                 }
-                //
                 p.timeSinceLastServerPositionUpdate=0
             }
             else{
