@@ -285,8 +285,8 @@ socket.on("testPositionUpdator",function(data){//server connection
 
 
 socket.on("forceSnapPosition",function(data){
-    me.x=data.x
-    me.y=data.y
+    //me.x=data.x
+    //me.y=data.y
     console.log("ah snap!")
 });
 

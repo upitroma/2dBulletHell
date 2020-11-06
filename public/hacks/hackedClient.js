@@ -293,3 +293,9 @@ socket.on("serverPlayerDisconnect",function(data){
     //TODO: remove player from array
     //FIXME: it dosen't work
 })
+
+socket.on("forceSnapPosition",function(data){
+    me.x=data.x
+    me.y=data.y
+    console.log("ah snap!")
+});
