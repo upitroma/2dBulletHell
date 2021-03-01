@@ -211,6 +211,8 @@ function moveOthers(deltaTime){
 
 
         interpolate(p,deltaTime)
+        //p.x=p.sx
+        //p.y=p.sy
     })
 }
 

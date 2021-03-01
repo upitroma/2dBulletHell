@@ -17,7 +17,7 @@ client reports position and inputs,
 client reports own collision and hits.
 
 server checks the position
-    is player >110% faster than they should?
+    is player faster than they should?
     is player in a wall?
     is player colliding with bullet?
 
@@ -26,8 +26,9 @@ server checks the position
 
     if player is out of bounds, move player to last verified position
         send new position to player and snap them to last verified position.
+        player's next reported position must equal the force snap position
 
-    individual bullets should be synced for now, but only temporary since that is a lot of bandwidth.
+    individual bullets should be network synced for now, but only temporary since that is a lot of bandwidth.
 
 */
 
@@ -276,7 +277,7 @@ function getIp(){
             }
         }
     }
-    return addresses
+    return addresses[0]
 }
 
 function getTotalActiveSockets(){
