@@ -1,18 +1,12 @@
 {
   "name": "messing_with_node",
   "version": "0.0.0",
-  "description": "https://www.youtube.com/watch?v=ggVsXljT0MI",
+  "description": "A waste of time to help me learn about networking and lag management",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "me",
-  "license": "ISC",
+  "author": "upitroma",
+  "license": "CC-BY",
   "dependencies": {
     "express": "^4.17.1",
     "socket.io": "^2.4.0"
-  },
-  "devDependencies": {
-    "nodemon": "^2.0.2"
   }
 }
