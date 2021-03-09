@@ -79,6 +79,31 @@ var clientId=0
 
 
 function getAveragePlayerSpeed(p){
+
+    /*Bad ideas that probably won't work
+
+    player sends timestamp with every position update (players might be able to 'store' momentum by manipulating their clock)
+        sync time at start
+        time would need to be verified
+            P: player; S: server; 0=current; -1=previous; 1=next
+
+            Pt0 < St0 (packets do not send instantly)
+            Pt0 > Pt-1 (timestamps must come in order)
+            first Pt > St when player connected (verifies player did not set their clock back)
+
+            
+    total server authority, client is asynced from server (players could make themselves invincible)
+        player sends inputs, server decides position
+        player moves noramlly client side
+        hit management:
+            client authority (client can become invincible)
+            server authority (players will seem to get hit at random)
+
+
+    
+    */
+
+
     p.pastPositions.push({
         x:p.reportedPosition.x,
         y:p.reportedPosition.y
@@ -103,6 +128,17 @@ function getAveragePlayerSpeed(p){
         
 
         aveSpeed=totalDeltaDist/totalDeltaTime*1000
+        //console.log(aveSpeed)
+
+        tempx=p.pastPositions[p.pastPositions.length-1].x-p.pastPositions[p.pastPositions.length-3].x
+        tempy=p.pastPositions[p.pastPositions.length-1].y-p.pastPositions[p.pastPositions.length-3].y
+
+        tempT=p.pastPositionTimestamps[p.pastPositionTimestamps.length-1]-p.pastPositionTimestamps[p.pastPositionTimestamps.length-3]//time between last update
+
+        console.log(
+            Math.sqrt((tempx*tempx)+(tempy*tempy)) / tempT * 1000
+        )
+
         return aveSpeed
 
     }
