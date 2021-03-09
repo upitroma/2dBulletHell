@@ -130,11 +130,12 @@ function movePlayers(deltaTime){
                 if(aveSpeed>playerSpeedNormal+speedLeeway)
                 {
                     console.log("player is too fast, server should pin them in place this frame")
+                    //send message to player to stop them client side
                     p.socket.emit("forceSnapPosition",{
                         x: p.serverPosition.x,
                         y: p.serverPosition.y
                     });
-                    //send message to player to stop them client side
+                    
                 }
                 else{
                     //TODO: check for collisions
@@ -149,9 +150,8 @@ function movePlayers(deltaTime){
                 exterpolate(p,deltaTime)
             }
 
-            
+            //disconnects inactive sockets
             p.sentUpdateSinceLastFrame=false//reset for next frame
-
             if(new Date().getTime() - p.lastUpdateTimestamp > 3000){
                 p.isActive=false
                 console.log(p.socket.id+" was kicked")
