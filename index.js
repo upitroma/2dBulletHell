@@ -29,6 +29,7 @@ server checks the position
         player's next reported position must equal the force snap position
 
     individual bullets should be network synced for now, but only temporary since that is a lot of bandwidth.
+        eventully it would be nice to only sync the pattern and a timescale, and have the client rebuild the pattern on their end
 
 */
 
@@ -67,6 +68,19 @@ class Player{
 
         this.pastPositions=[]//trying to calculate eve speed
         this.pastPositionTimestamps=[]
+    }
+}
+
+class Bullet{
+    constructor(x,y,xVelo,yVelo){
+        this.x=x
+        this.y=y
+        this.xVelo=xVelo
+        this.yVelo=yVelo
+
+        //network syncing individual bullets is a bad idea. should only sync the spawn and velocity and have the client extrapolate.
+        //client should report their own hits, but the server will check collisions as well to catch cheaters
+            //clients may be able to lag switch their way through bullets. have to think about this...
     }
 }
 
@@ -259,7 +273,6 @@ setInterval(function(){
         networkUpdate()
         timeSinceLastNetworkUpdate=0
     }
-
 
     lastFrameTimeStamp=new Date().getTime()
     },
