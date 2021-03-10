@@ -116,20 +116,29 @@ function getAveragePlayerSpeed(p){
         p.pastPositions.splice(0,1)
         p.pastPositionTimestamps.splice(0,1)
 
-        totalDeltaX=p.pastPositions[p.pastPositions.length-1].x-p.pastPositions[0].x
+
+        totalDistTraveled=0
+        for(i=0;i<9;i++){
+            dx=p.pastPositions[i+1].x-p.pastPositions[i].x
+            dy=p.pastPositions[i+1].y-p.pastPositions[i].y
+            totalDistTraveled+=Math.sqrt( (dx*dx) + (dy*dy) ) //pythagorean
+        }
+
+        /*totalDeltaX=p.pastPositions[p.pastPositions.length-1].x-p.pastPositions[0].x
         totalDeltaY=p.pastPositions[p.pastPositions.length-1].y-p.pastPositions[0].y
 
         totalDeltaDist=Math.sqrt(
             (totalDeltaX*totalDeltaX)+(totalDeltaY*totalDeltaY)
         )
+        */
 
         totalDeltaTime=p.pastPositionTimestamps[p.pastPositionTimestamps.length-1]-p.pastPositionTimestamps[0]
 
         
 
-        aveSpeed=totalDeltaDist/totalDeltaTime*1000
+        aveSpeed=totalDistTraveled/totalDeltaTime*1000
         //console.log(aveSpeed)
-
+        /*
         tempx=p.pastPositions[p.pastPositions.length-1].x-p.pastPositions[p.pastPositions.length-3].x
         tempy=p.pastPositions[p.pastPositions.length-1].y-p.pastPositions[p.pastPositions.length-3].y
 
@@ -138,6 +147,10 @@ function getAveragePlayerSpeed(p){
         console.log(
             Math.sqrt((tempx*tempx)+(tempy*tempy)) / tempT * 1000
         )
+
+        */
+
+        console.log(aveSpeed)
 
         return aveSpeed
 
