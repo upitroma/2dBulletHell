@@ -303,3 +303,8 @@ socket.on("serverPlayerDisconnect",function(data){
     //TODO: remove player from array
     //FIXME: it dosen't work
 })
+socket.on("IdleDisconnect",function(){
+    alert("the server has disconnected you for being idol")
+})
+
+

@@ -179,6 +179,7 @@ function movePlayers(deltaTime){
             if(new Date().getTime() - p.lastUpdateTimestamp > 3000){
                 p.isActive=false
                 console.log(p.socket.id+" was kicked")
+                p.socket.emit("IdleDisconnect")
                 io.sockets.emit("serverPlayerDisconnect",p.socket.id)
             }
         }
