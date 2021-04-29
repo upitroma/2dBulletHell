@@ -57,9 +57,13 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 //graphics--------------
+BG=new Image()
+BG.src="backgroundTest.png"
 function drawBackground(){
     context.fillStyle = "black"
     context.fillRect(0, 0, canvas.width, canvas.height); 
+
+    context.drawImage(BG,me.x-(canvas.width/2),me.y-(canvas.height/2),canvas.width,canvas.height,0,0,canvas.width,canvas.height)
 }
 
 //https://gamedev.stackexchange.com/questions/114898/frustum-culling-how-to-calculate-if-an-angle-is-between-another-two-angles
@@ -89,9 +93,6 @@ window.onload = function(){
         //dynamically resize screen--------
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        drawBackground();
-
-        canvas.width=canvas.width//refresh canvas
         drawBackground()
 
         //no need to slow down unconnected clients
@@ -112,8 +113,8 @@ window.onload = function(){
             context.fillStyle = 'blue'
             context.strokeStyle="blue"
             context.beginPath();
-            context.moveTo(me.x+10,me.y)
-            context.arc(me.x, me.y, 10, 0, 2 * Math.PI);
+            context.moveTo((canvas.width/2)+10,(canvas.height/2))
+            context.arc((canvas.width/2), (canvas.height/2), 10, 0, 2 * Math.PI);
             context.closePath();
             context.fill();
             context.stroke();
@@ -125,8 +126,8 @@ window.onload = function(){
                     context.fillStyle = 'red'
                     context.strokeStyle="red"
                     context.beginPath();
-                    context.moveTo(vp.x+10,vp.y)
-                    context.arc(vp.x, vp.y, 10, 0, 2 * Math.PI);
+                    context.moveTo((canvas.width/2)+vp.x-me.x+10,(canvas.height/2)+vp.y-me.y)
+                    context.arc((canvas.width/2)+vp.x-me.x, (canvas.height/2)+vp.y-me.y, 10, 0, 2 * Math.PI);
                     context.closePath();
                     context.fill();
                     context.stroke();
