@@ -90,6 +90,10 @@ window.onload = function(){
     
     function update(deltatime){
 
+        //move players locally
+        moveMe(deltatime)
+        moveOthers(deltatime)
+
         //dynamically resize screen--------
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
@@ -103,9 +107,7 @@ window.onload = function(){
                 uploadtimer=0                
             }
 
-            //move players locally
-            moveMe(deltatime)
-            moveOthers(deltatime)
+            
 
 
             //render self
