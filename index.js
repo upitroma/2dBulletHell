@@ -1,5 +1,6 @@
 var express = require("express")
 var socket = require("socket.io")
+var fs = require('fs');
 
 const gameClockSpeed=60// hz
 
@@ -95,6 +96,15 @@ var playerLookup=[]
 var io = socket(server)
 
 var clientId=0
+
+
+//load assets
+//https://stackoverflow.com/questions/26331787/socket-io-node-js-simple-example-to-send-image-files-from-server-to-client
+var lvl1BgBuf
+fs.readFile('./backgroundTest.jpg', function(err, buf){
+    lvl1BgBuf=buf
+    console.log('image file is initialized!');
+});
 
 //not perfect, but it will work for now
 function getAveragePlayerSpeed(p){
@@ -297,6 +307,9 @@ io.on("connection",function(socket){
     playerLookup[socket.id].socket.emit("serverPrivate","connected on socket: "+socket.id)
     console.log("client connected on socket: ",socket.id +" Current active sockets: "+getTotalActiveSockets())
 
+    //load assets
+    //https://stackoverflow.com/questions/26331787/socket-io-node-js-simple-example-to-send-image-files-from-server-to-client
+    socket.emit('imageLoad', { name:"bg", buffer: lvl1BgBuf.toString('base64') }); 
 
     socket.on("playerData",function(data){
         //record data
@@ -314,7 +327,7 @@ io.on("connection",function(socket){
             playerLookup[socket.id].isActive=true
             console.log(socket.id, " has reconnected")
         }
-        
+
     })
 
     socket.on('disconnect', function(){

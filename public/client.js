@@ -58,7 +58,7 @@ canvas.height = window.innerHeight;
 
 //graphics--------------
 BG=new Image()
-BG.src="backgroundTest.jpg"
+//BG.src="backgroundTest.jpg"
 function drawBackground(){
     context.fillStyle = "black"
     context.fillRect(0, 0, canvas.width, canvas.height); 
@@ -314,6 +314,13 @@ socket.on("forceSnapPosition",function(data){
     });
     console.log("ah snap!")
 });
+
+socket.on("imageLoad", function(data) {
+    if(data.name="bg"){
+        BG.src = 'data:image/jpeg;base64,' + data.buffer;
+    }
+});
+
 
 
 socket.on("serverMessage",function(data){
