@@ -44,6 +44,30 @@ var server = app.listen(4000,function(){
 //static files
 app.use(express.static("public"))
 
+
+//load lvls
+var LVL = {
+    "spawnPos":{"x":0,"y":0},
+    "lvlName":"",
+    "bgBuffer":""
+    
+}
+function loadLvl(jsonPath){
+    newLevel=JSON.parse(fs.readFileSync(jsonPath))
+    LVL.spawnPos=newLevel.spawnPos
+    LVL.lvlName=newLevel.lvlName
+
+    //https://stackoverflow.com/questions/26331787/socket-io-node-js-simple-example-to-send-image-files-from-server-to-client
+    fs.readFile(newLevel.bgPath, function(err, buf){
+        LVL.bgBuffer=buf
+    })
+}
+
+
+//load testLvl
+loadLvl("testLvl.json")
+
+
 class Player{
     constructor(socket){
         this.socket=socket
@@ -51,10 +75,8 @@ class Player{
 
         this.lastUpdateTimestamp=new Date().getTime()
 
-        this.serverPosition={
-            x:1983,
-            y:1207
-        }
+        this.serverPosition=LVL.spawnPos
+
         this.reportedPosition={
             x:this.serverPosition.x,
             y:this.serverPosition.y
@@ -97,14 +119,6 @@ var io = socket(server)
 
 var clientId=0
 
-
-//load assets
-//https://stackoverflow.com/questions/26331787/socket-io-node-js-simple-example-to-send-image-files-from-server-to-client
-var lvl1BgBuf
-fs.readFile('./backgroundTest.jpg', function(err, buf){
-    lvl1BgBuf=buf
-    console.log('image file is initialized!');
-});
 
 //not perfect, but it will work for now
 function getAveragePlayerSpeed(p){
@@ -309,7 +323,7 @@ io.on("connection",function(socket){
 
     //load assets
     //https://stackoverflow.com/questions/26331787/socket-io-node-js-simple-example-to-send-image-files-from-server-to-client
-    socket.emit('imageLoad', { name:"bg", buffer: lvl1BgBuf.toString('base64') }); 
+    socket.emit('imageLoad', { name:"bg", buffer: LVL.bgBuffer.toString('base64') }); 
 
     socket.on("playerData",function(data){
         //record data
@@ -340,7 +354,7 @@ io.on("connection",function(socket){
     
 });
 
-
+//https://stackoverflow.com/questions/10750303/how-can-i-get-the-local-ip-address-in-node-js
 function getIp(){
     var os = require('os');
     var interfaces = os.networkInterfaces();

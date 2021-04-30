@@ -1,0 +1,8 @@
+{
+    "lvlName":"Simple Beginnings",
+    "bgPath":"./backgroundTest.jpg",
+    "spawnPos":{
+        "x":1983,
+        "y":1207
+    }
+}
