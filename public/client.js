@@ -58,7 +58,7 @@ canvas.height = window.innerHeight;
 
 //graphics--------------
 BG=new Image()
-BG.src="backgroundTest.png"
+BG.src="backgroundTest.jpg"
 function drawBackground(){
     context.fillStyle = "black"
     context.fillRect(0, 0, canvas.width, canvas.height); 
@@ -271,6 +271,13 @@ function updatePlayer(){
 
 socket.on("serverPrivate",function(data){//server connection
     console.log("serverPrivate "+data)
+    me.isConnected=true
+});
+
+socket.on("serverTp",function(data){//server connection
+    console.log("server Tp "+data.x+" "+data.y)
+    me.x=data.x
+    me.y=data.y
     me.isConnected=true
 });
 

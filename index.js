@@ -51,12 +51,12 @@ class Player{
         this.lastUpdateTimestamp=new Date().getTime()
 
         this.serverPosition={
-            x:100,
-            y:100
+            x:1983,
+            y:1207
         }
         this.reportedPosition={
-            x:100,
-            y:100
+            x:this.serverPosition.x,
+            y:this.serverPosition.y
         }
         this.inputs={
             up: false,
@@ -262,6 +262,7 @@ function exterpolate(p,deltaTime){
 io.on("connection",function(socket){
     socket.id=clientId++
     playerLookup[socket.id]=new Player(socket)
+    playerLookup[socket.id].socket.emit("serverTp",playerLookup[socket.id].serverPosition)
     playerLookup[socket.id].socket.emit("serverPrivate","connected on socket: "+socket.id)
     console.log("client connected on socket: ",socket.id +" Current active sockets: "+getTotalActiveSockets())
 
