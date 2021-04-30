@@ -287,6 +287,7 @@ socket.on("testPositionUpdator",function(data){//server connection
         if(typeof me.visiblePlayers[data[i].id] != "undefined"){
             me.visiblePlayers[data[i].id].sx=data[i].x
             me.visiblePlayers[data[i].id].sy=data[i].y
+            me.visiblePlayers[data[i].id].isActive=true
         }
         else{
             me.visiblePlayers[data[i].id]=new OtherPlayer(data[i].x, data[i].y)
@@ -297,8 +298,20 @@ socket.on("testPositionUpdator",function(data){//server connection
 
 
 socket.on("forceSnapPosition",function(data){
-    //me.x=data.x
-    //me.y=data.y
+    me.x=data.x
+    me.y=data.y
+
+    //player must acknowledge the snap before the server will let them move
+    p=me
+    socket.emit("playerData",{
+        //translate to absolute coordinates
+        x: p.x,
+        y: p.y,
+        up: keys[me.keybindings.up],
+        down: keys[me.keybindings.down],
+        left: keys[me.keybindings.left],
+        right: keys[me.keybindings.right],
+    });
     console.log("ah snap!")
 });
 

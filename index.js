@@ -7,7 +7,7 @@ const networkUpdateSpeed=30// hz
 
 const playerSpeedNormal=300// px/s
 
-const speedLeeway=60//global snap distance px
+const speedLeeway=50//global snap distance px
 
 
 /* 
@@ -66,8 +66,13 @@ class Player{
         }
         this.sentUpdateSinceLastFrame=false
 
-        this.pastPositions=[]//trying to calculate eve speed
+        //used to calculate ave speed
+        this.pastPositions=[]
         this.pastPositionTimestamps=[]
+
+        //used to correct speadhacking
+        this.isPinned=false
+        this.pinnedPosition=null
     }
 }
 
@@ -142,43 +147,69 @@ function movePlayers(deltaTime){
     playerLookup.forEach(function(p){
         p.timeSinceLastServerPositionUpdate+=deltaTime
         if(p.isActive){
-            //console.log(p.reportedPosition.x+" "+p.serverPosition.x)
-
-            //p.serverPosition=p.reportedPosition//FULL client authoraty
 
             if(p.sentUpdateSinceLastFrame){
 
-                //check for speedhacks and lag
-                aveSpeed=getAveragePlayerSpeed(p)
-
-                if(aveSpeed>playerSpeedNormal+speedLeeway)
-                {
-                    console.log("player is too fast, server should pin them in place this frame")
-                    //send message to player to stop them client side
-                    p.socket.emit("forceSnapPosition",{
-                        x: p.serverPosition.x,
-                        y: p.serverPosition.y
-                    });
-                    
+                if(p.isPinned){
+                    if(p.reportedPosition=p.pinnedPosition){
+                        //user complied. unpin them
+                        p.isPinned=false
+                        p.pinnedPosition=[]
+                    }
+                    else{
+                        //user did not comply. pin them again
+                        p.socket.emit("forceSnapPosition",{
+                            x: p.pinnedPosition,
+                            y: p.pinnedPosition
+                        });
+                    }
                 }
+
                 else{
                     //TODO: check for collisions
-                    p.serverPosition.x=p.reportedPosition.x
-                    p.serverPosition.y=p.reportedPosition.y
+                     //check for speedhacks and lag
+                     aveSpeed=getAveragePlayerSpeed(p)
+
+                     if(aveSpeed>playerSpeedNormal+speedLeeway)
+                     {
+                         console.log("player is too fast, server should pin them in place this frame")
+                         //send message to player to stop them client side
+                         p.socket.emit("forceSnapPosition",{
+                             x: p.serverPosition.x,
+                             y: p.serverPosition.y
+                         });
+                         p.pinnedPosition=p.serverPosition
+                         p.isPinned=true
+ 
+                     }
+                     else{
+                         //TODO: check for collisions
+ 
+                         //if position is valid, update server position to match
+                         p.serverPosition.x=p.reportedPosition.x
+                         p.serverPosition.y=p.reportedPosition.y
+                     }
+
                 }
                 p.timeSinceLastServerPositionUpdate=0
             }
             else{
-                
                 //extrapolate then validate position
-                exterpolate(p,deltaTime)
+                if(p.isPinned){
+                    //probably not nessisary since player should not be able to move while pinned.
+                    p.serverPosition=p.pinnedPosition
+                }
+                else{
+                    exterpolate(p,deltaTime)
+                    //TODO: check for collision after extrapolation
+                }
             }
 
             //disconnects inactive sockets
             p.sentUpdateSinceLastFrame=false//reset for next frame
             if(new Date().getTime() - p.lastUpdateTimestamp > 3000){
                 p.isActive=false
-                console.log(p.socket.id+" was kicked")
+                console.log(p.socket.id+" was kicked for being idol")
                 p.socket.emit("IdleDisconnect")
                 io.sockets.emit("serverPlayerDisconnect",p.socket.id)
             }
@@ -241,7 +272,7 @@ setInterval(function(){
     1000/gameClockSpeed//hz to s
 )
 
-function exterpolate(p,deltaTime){
+function exterpolate(p,deltaTime){ //need to normalize. players can travel at sqrt(2)*maxSpeed if on a diagonal
     var deltaY = (
         p.inputs.down*playerSpeedNormal*deltaTime
         - p.inputs.up*playerSpeedNormal*deltaTime
@@ -277,6 +308,13 @@ io.on("connection",function(socket){
         playerLookup[socket.id].inputs.right=data.right
         playerLookup[socket.id].lastUpdateTimestamp=new Date().getTime()
         playerLookup[socket.id].sentUpdateSinceLastFrame=true
+
+        //set active
+        if(!playerLookup[socket.id].isActive){
+            playerLookup[socket.id].isActive=true
+            console.log(socket.id, " has reconnected")
+        }
+        
     })
 
     socket.on('disconnect', function(){
