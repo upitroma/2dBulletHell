@@ -75,7 +75,10 @@ class Player{
 
         this.lastUpdateTimestamp=new Date().getTime()
 
-        this.serverPosition=LVL.spawnPos
+        this.serverPosition = {
+            x:LVL.spawnPos.x,
+            y:LVL.spawnPos.y
+        }
 
         this.reportedPosition={
             x:this.serverPosition.x,
