@@ -1,5 +1,5 @@
 {
-  "name": "messing_with_node",
+  "name": "multiplayer-bullet-hell",
   "version": "0.0.0",
   "description": "A waste of time to help me learn about networking and lag management",
   "main": "index.js",

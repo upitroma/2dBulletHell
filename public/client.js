@@ -1,5 +1,5 @@
 //Make connection
-var socket = io.connect(window.location.href);//change to server's location
+var socket = io.connect(window.location.href);//change to server's location for electron
 
 //TODO: var for overall size of the game
 
