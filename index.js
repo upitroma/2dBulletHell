@@ -81,8 +81,8 @@ class Player{
         }
 
         this.reportedPosition={
-            x:this.serverPosition.x,
-            y:this.serverPosition.y
+            x:LVL.spawnPos.x,
+            y:LVL.spawnPos.y
         }
         this.inputs={
             up: false,
@@ -98,7 +98,10 @@ class Player{
 
         //used to correct speadhacking
         this.isPinned=false
-        this.pinnedPosition=null
+        this.pinnedPosition={
+            x:null,
+            y:null
+        }
     }
 }
 
@@ -181,7 +184,10 @@ function movePlayers(deltaTime){
                     if(p.reportedPosition=p.pinnedPosition){
                         //user complied. unpin them
                         p.isPinned=false
-                        p.pinnedPosition=[]
+                        p.pinnedPosition={
+                            x:null,
+                            y:null
+                        }
                     }
                     else{
                         //user did not comply. pin them again
@@ -200,21 +206,21 @@ function movePlayers(deltaTime){
                      if(aveSpeed>playerSpeedNormal+speedLeeway)
                      {
                          console.log("player is too fast, server should pin them in place this frame")
-                         //send message to player to stop them client side
+                         //send message to player to stop them client side   
                          p.socket.emit("forceSnapPosition",{
                              x: p.serverPosition.x,
                              y: p.serverPosition.y
                          });
-                         p.pinnedPosition=p.serverPosition
+                         p.pinnedPosition.x=p.serverPosition.x
+                         p.pinnedPosition.y=p.serverPosition.y
                          p.isPinned=true
  
                      }
-                     else{
-                         //TODO: check for collisions
- 
-                         //if position is valid, update server position to match
-                         p.serverPosition.x=p.reportedPosition.x
-                         p.serverPosition.y=p.reportedPosition.y
+                     else if (!p.isPinned){
+                        //if position is valid, update server position to match
+                        p.serverPosition.x=p.reportedPosition.x
+                        p.serverPosition.y=p.reportedPosition.y
+                        //TODO: check for collisions
                      }
 
                 }
