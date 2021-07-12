@@ -42,8 +42,37 @@ class Me{
             right: 68
         }
     }
+    render(){
+        context.fillStyle = "blue"
+        context.strokeStyle="blue"
+        context.beginPath();
+        context.moveTo((canvas.width/2)+10,(canvas.height/2))
+        context.arc((canvas.width/2), (canvas.height/2), 10, 0, 2 * Math.PI);
+        context.closePath();
+        context.fill();
+        context.stroke();
+    }
 }
 var me=new Me()
+
+
+class Wall{
+    constructor(x1,y1,x2,y2,color="#f403fc"){
+        this.x1=x1
+        this.y1=y1
+        this.x2=x2
+        this.y2=y2
+        this.color=color
+    }
+    render(px,py){
+        context.fillStyle=this.color
+        
+        context.fillRect((canvas.width/2)+this.x1-px,(canvas.height/2)+this.y1-py,this.x2-this.x1,this.y2-this.y1, this.color)
+        context.stroke();
+    }
+}
+const wallTest = new Wall(1000,1000,600,600)
+me.visibleWalls=[wallTest]
 
 
 //handle inputs-----------------------------
@@ -79,6 +108,8 @@ function deltaAngle(px,py,pa,objx,objy){
 }
 
 
+
+
 //game logic------------------------------------
 
 
@@ -112,14 +143,7 @@ window.onload = function(){
 
             //render self
             //TODO: translate absolute coords to relative(to screen size)
-            context.fillStyle = 'blue'
-            context.strokeStyle="blue"
-            context.beginPath();
-            context.moveTo((canvas.width/2)+10,(canvas.height/2))
-            context.arc((canvas.width/2), (canvas.height/2), 10, 0, 2 * Math.PI);
-            context.closePath();
-            context.fill();
-            context.stroke();
+            me.render()
             
 
             //render others
@@ -139,14 +163,10 @@ window.onload = function(){
 
             //render visible walls
             me.visibleWalls.forEach(function(w){
-                context.fillStyle = 'grey'
-                context.strokeStyle="grey"
-                context.fillRect((w.x1*mul)+me.x,(-w.y1*mul)+me.y,w.height*mul,w.width*mul)
-                context.fill();
-                context.stroke();
+                w.render(me.x,me.y)
             })
-            context.fillStyle = 'blue'
-            context.strokeStyle="blue"    
+            //context.fillStyle = "red"
+            //context.strokeStyle="blue"    
         
         }
 
