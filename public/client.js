@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location for 
 
 //TODO: var for overall size of the game
 
-var uploadrate=0 //slow for lag testing, will be set to 0
+var uploadrate=1 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300 //must be same as server side
 
@@ -57,21 +57,22 @@ var me=new Me()
 
 
 class Wall{
-    constructor(x1,y1,x2,y2,color="#f403fc"){
-        this.x1=x1
-        this.y1=y1
-        this.x2=x2
-        this.y2=y2
+    constructor(x,y,width,height,color="#f403fc"){
+        this.x=x
+        this.y=y
+        this.width=width
+        this.height=height
         this.color=color
     }
     render(px,py){
         context.fillStyle=this.color
         
-        context.fillRect((canvas.width/2)+this.x1-px,(canvas.height/2)+this.y1-py,this.x2-this.x1,this.y2-this.y1, this.color)
+        //context.fillRect((canvas.width/2)+this.x1-px,(canvas.height/2)+this.y1-py,this.x1-this.x2,this.y2-this.y1, this.color)
+        context.fillRect((canvas.width/2)+this.x-px,(canvas.height/2)+this.y-py,this.width,this.height, this.color)
         context.stroke();
     }
 }
-const wallTest = new Wall(1000,1000,600,600)
+const wallTest = new Wall(1000,2100,300,300)
 me.visibleWalls=[wallTest]
 
 
@@ -204,12 +205,32 @@ function moveMe(deltaTime){
     )
 
     angle = Math.atan2(deltaY, deltaX);
+
+    deltaX=(Math.cos(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.right]||keys[me.keybindings.left])
+    deltaY=(Math.sin(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.down]||keys[me.keybindings.up])
+
+    //check collision with walls
+    me.visibleWalls.forEach(function(w){
+        //if player would be inside a wall
+        if(w.x<me.x+deltaX && w.x+w.width>me.x+deltaX){
+            if(w.y<me.y+deltaY && w.y+w.height>me.y+deltaY){
+                console.log("player would be inside wall")
+            }
+        }
+        else{
+            //check if player passed through wall
+            if(me.x<w.x && me.x+deltaX>w.x+w.width){
+                console.log("X player passed through wall")
+            }
+        }
+    });
+
     
-    me.x+=(Math.cos(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.right]||keys[me.keybindings.left])
-    me.y+=(Math.sin(angle))*playerSpeedNormal*deltaTime*(keys[me.keybindings.down]||keys[me.keybindings.up])
+
+    me.x+=deltaX
+    me.y+=deltaY
     //TODO: collision
     //TODO: stop from going off screen
-    //TODO: scale speed to screen size
     
 }
 function moveOthers(deltaTime){
