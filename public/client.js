@@ -3,7 +3,7 @@ var socket = io.connect(window.location.href);//change to server's location for 
 
 //TODO: var for overall size of the game
 
-var uploadrate=1 //slow for lag testing, will be set to 0
+var uploadrate=0 //slow for lag testing, will be set to 0
 
 var playerSpeedNormal=300 //must be same as server side
 
@@ -212,17 +212,20 @@ function moveMe(deltaTime){
     //check collision with walls
     me.visibleWalls.forEach(function(w){
         //if player would be inside a wall
-        if(w.x<me.x+deltaX && w.x+w.width>me.x+deltaX){
+
+
+        if(w.y<me.y && w.y+w.height>me.y){
+            if(w.x<me.x+deltaX && w.x+w.width>me.x+deltaX){
+                deltaX=0
+            }
+
+        }
+        if(w.x<me.x && w.x+w.width>me.x){
             if(w.y<me.y+deltaY && w.y+w.height>me.y+deltaY){
-                console.log("player would be inside wall")
+                deltaY=0
             }
         }
-        else{
-            //check if player passed through wall
-            if(me.x<w.x && me.x+deltaX>w.x+w.width){
-                console.log("X player passed through wall")
-            }
-        }
+
     });
 
     
